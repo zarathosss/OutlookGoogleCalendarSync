@@ -404,7 +404,7 @@ namespace OutlookGoogleCalendarSync {
             if (dirtyCache) {
                 log.Debug("Google exception cache not being used. Retrieving all recurring instances afresh...");
                 //Remove dirty items
-                googleExceptions.RemoveAll(ev => ev.RecurringEventId == gRecurringEventID);
+                //googleExceptions.RemoveAll(ev => ev.RecurringEventId == gRecurringEventID);
             } else {
                 foreach (Event gExcp in googleExceptions) {
                     if (gExcp.RecurringEventId == gRecurringEventID) {
@@ -420,9 +420,13 @@ namespace OutlookGoogleCalendarSync {
                 }
                 log.Debug("Google exception event is not cached. Retrieving all recurring instances...");
             }
+            int removeCount = googleExceptions.RemoveAll(ev => ev.RecurringEventId == gRecurringEventID);
+            log.Debug("Removed " + removeCount + " instances of recurrence "+ gRecurringEventID);
+            log.Debug(googleExceptions.Count + " cached Google instances left.");
             List<Event> gInstances = GoogleOgcs.Calendar.Instance.GetCalendarEntriesInRecurrence(gRecurringEventID);
             //Add any new exceptions to local cache
             googleExceptions = googleExceptions.Union(gInstances.Where(ev => !String.IsNullOrEmpty(ev.RecurringEventId))).ToList();
+            log.Debug(googleExceptions.Count + " cached Google instances.");
             foreach (Event gInst in gInstances) {
                 if (gInst.RecurringEventId == gRecurringEventID) {
                     if (((!oIsDeleted || (oIsDeleted && !oExcp.Deleted)) /* Weirdness when exception is cancelled by organiser but not yet deleted/accepted by recipient */
@@ -596,7 +600,7 @@ namespace OutlookGoogleCalendarSync {
                                             aiExcp = oExcp.AppointmentItem;
                                             //Force a compare of the exception if both G and O have been modified in last 24 hours
                                             TimeSpan modifiedDiff = (TimeSpan)(gExcp.Updated - aiExcp.LastModificationTime);
-                                            log.Fine("Difference in days between G and O exception: " + modifiedDiff);
+                                            log.Fine("Modification time difference (in days) between G and O exception: " + modifiedDiff);
                                             Boolean forceCompare = modifiedDiff < TimeSpan.FromDays(1);
                                             GoogleOgcs.Calendar.Instance.UpdateCalendarEntry(aiExcp, gExcp, ref excp_itemModified, forceCompare);
                                         } catch (System.Exception ex) {
@@ -610,7 +614,7 @@ namespace OutlookGoogleCalendarSync {
                                             GoogleOgcs.Calendar.Instance.UpdateCalendarEntry_save(ref gExcp);
                                         } catch (System.Exception ex) {
                                             Forms.Main.Instance.Console.UpdateWithError("Updated event exception failed to save.", ex);
-                                            log.Error(ex.StackTrace);
+                                            OGCSexception.Analyse(ex, true);
                                             if (MessageBox.Show("Updated Google event exception failed to save. Continue with synchronisation?", "Sync item failed", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                                                 continue;
                                             else {

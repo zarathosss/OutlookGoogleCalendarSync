@@ -122,7 +122,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             Int16 pageNum = 1;
 
             try {
-                log.Debug("Retrieving all recurring event instances from Google.");
+                log.Debug("Retrieving all recurring event instances from Google for " + recurringEventId);
                 do {
                     EventsResource.InstancesRequest ir = Service.Events.Instances(Settings.Instance.UseGoogleCalendar.Id, recurringEventId);
                     ir.ShowDeleted = true;
@@ -159,6 +159,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         if (request.Items != null) result.AddRange(request.Items);
                     }
                 } while (pageToken != null);
+                log.Fine(request.Items.Count + " recurring event instances found.");
                 return result;
 
             } catch (System.Exception ex) {
@@ -737,7 +738,19 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             int backoff = 0;
             while (backoff < backoffLimit) {
                 try {
-                    ev = Service.Events.Update(ev, Settings.Instance.UseGoogleCalendar.Id, ev.Id).Execute();
+                    //ev = Service.Events.Update(ev, Settings.Instance.UseGoogleCalendar.Id, ev.Id).Execute();
+                    EventsResource.UpdateRequest request = Service.Events.Update(ev, Settings.Instance.UseGoogleCalendar.Id, ev.Id);
+                    try {
+                        ev = request.Execute();
+                    } catch (Google.GoogleApiException ex) {
+                        if (ex.Error.Code == 412) { //Precondition failed
+                            log.Warn("The Event has changed since it was last retrieved - forcing an overwrite.");
+                            request.ETagAction = Google.Apis.ETagAction.Ignore;
+                            ev = request.Execute();
+                            log.Debug("Forced save successful.");
+                        } else
+                            throw;
+                    }
                     if (Settings.Instance.AddAttendees && Settings.Instance.APIlimit_inEffect) {
                         log.Info("API limit for attendee sync lifted :-)");
                         Settings.Instance.APIlimit_inEffect = false;
