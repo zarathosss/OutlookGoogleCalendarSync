@@ -480,7 +480,16 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                             ExchangeUser eu = null;
                             try {
                                 eu = addressEntry.GetExchangeUser();
-                                if (eu != null && eu.PrimarySmtpAddress != null)
+                                Boolean exchangeHasSmtp = false;
+                                try {
+                                    exchangeHasSmtp = (eu != null && eu.PrimarySmtpAddress != null);
+                                } catch (System.Runtime.InteropServices.COMException ex) {
+                                    if (OGCSexception.GetErrorCode(ex) == "0xB7940201")
+                                        log.Fail("The item PrimarySmtpAddress could not be found.");
+                                    else
+                                        throw ex;
+                                }
+                                if (exchangeHasSmtp)
                                     retEmail = eu.PrimarySmtpAddress;
                                 else {
                                     log.Warn("Exchange does not have an email for recipient: " + recipient.Name);
