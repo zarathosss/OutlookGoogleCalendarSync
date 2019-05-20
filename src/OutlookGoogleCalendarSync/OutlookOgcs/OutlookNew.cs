@@ -480,12 +480,18 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                         log.Fine("Address is from Exchange");
                         if (addressEntry.AddressEntryUserType == OlAddressEntryUserType.olExchangeUserAddressEntry ||
                             addressEntry.AddressEntryUserType == OlAddressEntryUserType.olExchangeRemoteUserAddressEntry) {
+                            log.Debug("Initialising eu variable");
                             ExchangeUser eu = null;
                             try {
+                                log.Debug("Calling GetExchangeUser()");
+                                try { log.Debug("ExchangeConnectionMode=" + oApp.GetNamespace("mapi").ExchangeConnectionMode.ToString()); } catch { log.Fail("Couldn't get ExchangeConnectionMode"); }
                                 eu = addressEntry.GetExchangeUser();
                                 Boolean exchangeHasSmtp = false;
                                 try {
+                                    log.Debug("Did GetExchangeUser() return something?");
+                                    log.Debug("eu != null:" + (eu != null));
                                     exchangeHasSmtp = (eu != null && eu.PrimarySmtpAddress != null);
+                                    log.Debug(exchangeHasSmtp);
                                 } catch (System.Runtime.InteropServices.COMException ex) {
                                     if (OGCSexception.GetErrorCode(ex) == "0xB7940201")
                                         log.Fail("The item PrimarySmtpAddress could not be found.");
