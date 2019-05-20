@@ -8,12 +8,12 @@ using log4net;
 //The Google API needs updating so we don't have to rely on System proxy setting
 //service.RequestFactory.Proxy = new WebProxy();
 
-namespace OutlookGoogleCalendarSync {
-    [DataContract]
-    public class SettingsProxy {
-        private static readonly ILog log = LogManager.GetLogger(typeof(SettingsProxy));
+namespace OutlookGoogleCalendarSync.SettingsStore {
+    [DataContract(Namespace = "http://schemas.datacontract.org/2004/07/OutlookGoogleCalendarSync")]
+    public class Proxy {
+        private static readonly ILog log = LogManager.GetLogger(typeof(Proxy));
 
-        public SettingsProxy() {
+        public Proxy() {
             //Turn on additional new protocols
             System.Net.ServicePointManager.SecurityProtocol |= System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls12;
 

@@ -55,6 +55,7 @@ namespace OutlookGoogleCalendarSync {
             Updater.MakeSquirrelAware();
             Forms.Splash.ShowMe();
 
+            SettingsStore.Upgrade.Check();
             log.Debug("Loading settings from file.");
             Settings.Load();
             
@@ -448,13 +449,8 @@ namespace OutlookGoogleCalendarSync {
                     Int32 upgradedFrom = Int16.MaxValue;
                     String expectedInstallDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                     expectedInstallDir = Path.Combine(expectedInstallDir, "OutlookGoogleCalendarSync");
-                    String paddedVersion = "";
                     if (settingsVersion != "Unknown") {
-                        foreach (String versionBit in settingsVersion.Split('.')) {
-                            paddedVersion += versionBit.PadLeft(2, '0');
-                        }
-                        upgradedFrom = Convert.ToInt32(paddedVersion);
-
+                        upgradedFrom = Program.VersionToInt(settingsVersion);
                     }
                     if ((settingsVersion == "Unknown" || upgradedFrom < 2050000) &&
                         !System.Windows.Forms.Application.ExecutablePath.ToString().StartsWith(expectedInstallDir)) 
@@ -486,6 +482,19 @@ namespace OutlookGoogleCalendarSync {
 
         public static void Donate() {
             System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=44DUQ7UT6WE2C&item_name=Outlook Google Calendar Sync from " + Settings.Instance.GaccountEmail);
+        }
+
+        /// <summary>
+        /// Convert a semantic version number string to an integer.
+        /// </summary>
+        /// <param name="semanticVersion">The semantic version number.</param>
+        /// <returns>The converted integer version number.</returns>
+        public static Int32 VersionToInt(String semanticVersion) {
+            String paddedVersion = "";
+            foreach (String versionBit in semanticVersion.Split('.')) {
+                paddedVersion += versionBit.PadLeft(2, '0');
+            }
+            return Convert.ToInt32(paddedVersion);
         }
     }
 }

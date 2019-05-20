@@ -319,7 +319,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             #endregion
             #region When
             this.gbSyncOptions_When.SuspendLayout();
-            tbDaysInThePast.Text = Settings.Instance.DaysInThePast.ToString();
+            tbDaysInThePast.Text = Settings.Instance.Calendar.DaysInThePast.ToString();
             tbDaysInTheFuture.Text = Settings.Instance.DaysInTheFuture.ToString();
             if (Settings.Instance.UsingPersonalAPIkeys()) {
                 tbDaysInTheFuture.Maximum = 365*10;
@@ -1295,7 +1295,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void tbDaysInThePast_ValueChanged(object sender, EventArgs e) {
-            Settings.Instance.DaysInThePast = (int)tbDaysInThePast.Value;
+            Settings.Instance.Calendar.DaysInThePast = (int)tbDaysInThePast.Value;
             if (this.Visible && !Settings.Instance.UsingPersonalAPIkeys() && tbDaysInThePast.Value == tbDaysInThePast.Maximum) {
                 this.ToolTips.Show("Limited to 1 year unless personal API keys are used. See 'Developer Options' on Google tab.", tbDaysInThePast);
             }

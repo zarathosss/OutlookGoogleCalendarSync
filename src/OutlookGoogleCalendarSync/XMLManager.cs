@@ -146,5 +146,35 @@ namespace OutlookGoogleCalendarSync {
                 sortedChildren.ForEach(c => source.Add(c));
             }
         }
+
+        public static XElement GetElement(String needleElement, XDocument xmlDoc) {
+            return xmlDoc.Element(ns + needleElement);
+        }
+        public static XElement GetElement(String needleElement, XElement element) {
+            return element.Element(ns + needleElement);
+        }
+
+        public static XElement AddElement(String nodeName, XElement parent, String value = null) {
+            log.Debug("Adding element '" + nodeName + "' under '" + parent.Name.LocalName + "'");
+            parent.Add(new XElement(ns + nodeName, value));
+            return GetElement(nodeName, parent);
+        }
+
+        public static void RemoveElement(String nodeName, XElement parent) {
+            log.Debug("Removing element '" + nodeName + "' under '" + parent.Name.LocalName + "'");
+            XElement target = GetElement(nodeName, parent);
+            target.Remove();
+        }
+
+        public static void MoveElement(String nodeName, XElement parent, XElement target) {
+            try {
+                String value = GetElement(nodeName, parent).Value;
+                XElement movedElement = AddElement(nodeName, target, value);
+                RemoveElement(nodeName, parent);
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse(ex);
+            }
+        }
+
     }
 }

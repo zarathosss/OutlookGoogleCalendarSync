@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 
 namespace OutlookGoogleCalendarSync {
     /// <summary>
-    /// Description of Settings.
+    /// The main Settings class.
     /// </summary>
 
     [DataContract]
@@ -92,8 +92,8 @@ namespace OutlookGoogleCalendarSync {
             GaccountEmail = "";
             CloakEmail = true;
 
+            Calendar = new SettingsStore.Calendar();
             SyncDirection = Sync.Direction.OutlookToGoogle;
-            DaysInThePast = 1;
             DaysInTheFuture = 60;
             SyncInterval = 0;
             SyncIntervalUnit = "Hours";
@@ -133,7 +133,7 @@ namespace OutlookGoogleCalendarSync {
             CreateCSVFiles = false;
             LoggingLevel = "DEBUG";
             portable = false;
-            Proxy = new SettingsProxy();
+            Proxy = new SettingsStore.Proxy();
 
             alphaReleases = !System.Windows.Forms.Application.ProductVersion.EndsWith("0.0");
             SkipVersion = null;
@@ -238,10 +238,9 @@ namespace OutlookGoogleCalendarSync {
         #endregion
         #region Sync Options
         //Main
-        public DateTime SyncStart { get { return DateTime.Today.AddDays(-DaysInThePast); } }
+        public DateTime SyncStart { get { return DateTime.Today.AddDays(-Calendar.DaysInThePast); } }
         public DateTime SyncEnd { get { return DateTime.Today.AddDays(+DaysInTheFuture + 1); } }
         [DataMember] public Sync.Direction SyncDirection { get; set; }
-        [DataMember] public int DaysInThePast { get; set; }
         [DataMember] public int DaysInTheFuture { get; set; }
         [DataMember] public int SyncInterval { get; set; }
         [DataMember] public String SyncIntervalUnit { get; set; }
@@ -320,7 +319,8 @@ namespace OutlookGoogleCalendarSync {
             }
         }
         //Proxy
-        [DataMember] public SettingsProxy Proxy { get; set; }
+        [DataMember] public SettingsStore.Proxy Proxy { get; set; }
+        [DataMember] public SettingsStore.Calendar Calendar { get; set; }
         #endregion
         #region About
         [DataMember] public string Version {
@@ -471,7 +471,7 @@ namespace OutlookGoogleCalendarSync {
                 }
             }
             log.Info(" When");
-            log.Info("  DaysInThePast: "+ DaysInThePast);
+            log.Info("  DaysInThePast: "+ Calendar.DaysInThePast);
             log.Info("  DaysInTheFuture:" + DaysInTheFuture);
             log.Info("  SyncInterval: " + SyncInterval);
             log.Info("  SyncIntervalUnit: " + SyncIntervalUnit);
