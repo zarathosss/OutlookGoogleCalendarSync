@@ -43,7 +43,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             Sync.Engine.Instance.OgcsTimer = new Sync.SyncTimer();
 
             //Set up listener for Outlook calendar changes
-            if (Settings.Instance.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
+            if (Settings.Instance.Calendar.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
 
             if (Settings.Instance.StartInTray) {
                 this.CreateHandle();
@@ -122,7 +122,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             ToolTips.SetToolTip(cbMuteClicks, "Mute any sounds when sync summary updates.");
             #endregion
 
-            if (Settings.Instance.ExtirpateOgcsMetadata) {
+            if (Settings.Instance.Calendar.ExtirpateOgcsMetadata) {
                 bSyncNow.FlatStyle = FlatStyle.Flat;
                 bSyncNow.BackColor = System.Drawing.Color.PaleVioletRed;
                 console.Update("<b>An advanced setting has been enabled.</b><br>If you perform a sync, it will remove all OGCS metadata from your calendar items within the synced date range, " +
@@ -138,9 +138,9 @@ namespace OutlookGoogleCalendarSync.Forms {
                 rbOutlookAltMB.Enabled = false;
                 rbOutlookSharedCal.Enabled = false;
             } else {
-                if (Settings.Instance.OutlookService == OutlookOgcs.Calendar.Service.AlternativeMailbox) {
+                if (Settings.Instance.Calendar.OutlookService == OutlookOgcs.Calendar.Service.AlternativeMailbox) {
                     rbOutlookAltMB.Checked = true;
-                } else if (Settings.Instance.OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
+                } else if (Settings.Instance.Calendar.OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
                     rbOutlookSharedCal.Checked = true;
                 } else {
                     rbOutlookDefaultMB.Checked = true;
@@ -175,7 +175,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             }
             theFolders = (Folders)OutlookOgcs.Calendar.ReleaseObject(theFolders);
             ddMailboxName.Items.AddRange(folderIDs.Keys.ToArray());
-            ddMailboxName.SelectedItem = Settings.Instance.MailboxName;
+            ddMailboxName.SelectedItem = Settings.Instance.Calendar.MailboxName;
 
             if (ddMailboxName.SelectedIndex == -1 && ddMailboxName.Items.Count > 0) { ddMailboxName.SelectedIndex = 0; }
 
@@ -189,7 +189,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             //Select the right calendar
             int c = 0;
             foreach (KeyValuePair<String, MAPIFolder> calendarFolder in OutlookOgcs.Calendar.Instance.CalendarFolders) {
-                if (calendarFolder.Value.EntryID == Settings.Instance.UseOutlookCalendar.Id) {
+                if (calendarFolder.Value.EntryID == Settings.Instance.Calendar.UseOutlookCalendar.Id) {
                     cbOutlookCalendars.SelectedIndex = c;
                 }
                 c++;
@@ -197,7 +197,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (cbOutlookCalendars.SelectedIndex == -1) cbOutlookCalendars.SelectedIndex = 0;
             #endregion
             #region Categories
-            cbCategoryFilter.SelectedItem = Settings.Instance.CategoriesRestrictBy == Settings.RestrictBy.Include ?
+            cbCategoryFilter.SelectedItem = Settings.Instance.Calendar.CategoriesRestrictBy == SettingsStore.Calendar.RestrictBy.Include ?
                 "Include" : "Exclude";
             if (OutlookOgcs.Factory.OutlookVersion < 12) {
                 clbCategories.Items.Clear();
@@ -209,7 +209,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 enableOutlookSettingsUI(true);
             }
             #endregion
-            cbOnlyRespondedInvites.Checked = Settings.Instance.OnlyRespondedInvites;
+            cbOnlyRespondedInvites.Checked = Settings.Instance.Calendar.OnlyRespondedInvites;
             #region DateTime Format / Locale
             Dictionary<string, string> customDates = new Dictionary<string, string>();
             customDates.Add("Default", "g");
@@ -230,12 +230,12 @@ namespace OutlookGoogleCalendarSync.Forms {
             cbOutlookDateFormat.ValueMember = "Value";
             for (int i = 0; i < cbOutlookDateFormat.Items.Count; i++) {
                 KeyValuePair<string, string> aFormat = (KeyValuePair<string, string>)cbOutlookDateFormat.Items[i];
-                if (aFormat.Value == Settings.Instance.OutlookDateFormat) {
+                if (aFormat.Value == Settings.Instance.Calendar.OutlookDateFormat) {
                     cbOutlookDateFormat.SelectedIndex = i;
                     break;
                 } else if (i == cbOutlookDateFormat.Items.Count - 1 && cbOutlookDateFormat.SelectedIndex == 0) {
                     cbOutlookDateFormat.SelectedIndex = i;
-                    tbOutlookDateFormat.Text = Settings.Instance.OutlookDateFormat;
+                    tbOutlookDateFormat.Text = Settings.Instance.Calendar.OutlookDateFormat;
                     tbOutlookDateFormat.ReadOnly = false;
                 }
             }
@@ -243,8 +243,8 @@ namespace OutlookGoogleCalendarSync.Forms {
             #endregion
             #region Google box
             tbConnectedAcc.Text = string.IsNullOrEmpty(Settings.Instance.GaccountEmail) ? "Not connected" : Settings.Instance.GaccountEmail;
-            if (Settings.Instance.UseGoogleCalendar != null && Settings.Instance.UseGoogleCalendar.Id != null) {
-                cbGoogleCalendars.Items.Add(Settings.Instance.UseGoogleCalendar);
+            if (Settings.Instance.Calendar.UseGoogleCalendar != null && Settings.Instance.Calendar.UseGoogleCalendar.Id != null) {
+                cbGoogleCalendars.Items.Add(Settings.Instance.Calendar.UseGoogleCalendar);
                 cbGoogleCalendars.SelectedIndex = 0;
                 tbClientID.ReadOnly = true;
                 tbClientSecret.ReadOnly = true;
@@ -272,35 +272,35 @@ namespace OutlookGoogleCalendarSync.Forms {
             //Sync Direction dropdown
             for (int i = 0; i < syncDirection.Items.Count; i++) {
                 Sync.Direction sd = (syncDirection.Items[i] as Sync.Direction);
-                if (sd.Id == Settings.Instance.SyncDirection.Id) {
+                if (sd.Id == Settings.Instance.Calendar.SyncDirection.Id) {
                     syncDirection.SelectedIndex = i;
                 }
             }
             if (syncDirection.SelectedIndex == -1) syncDirection.SelectedIndex = 0;
             this.gbSyncOptions_How.SuspendLayout();
-            cbMergeItems.Checked = Settings.Instance.MergeItems;
-            cbDisableDeletion.Checked = Settings.Instance.DisableDelete;
-            cbConfirmOnDelete.Enabled = !Settings.Instance.DisableDelete;
-            cbConfirmOnDelete.Checked = Settings.Instance.ConfirmOnDelete;
-            cbOfuscate.Checked = Settings.Instance.Obfuscation.Enabled;
+            cbMergeItems.Checked = Settings.Instance.Calendar.MergeItems;
+            cbDisableDeletion.Checked = Settings.Instance.Calendar.DisableDelete;
+            cbConfirmOnDelete.Enabled = !Settings.Instance.Calendar.DisableDelete;
+            cbConfirmOnDelete.Checked = Settings.Instance.Calendar.ConfirmOnDelete;
+            cbOfuscate.Checked = Settings.Instance.Calendar.Obfuscation.Enabled;
             //More Options
             howObfuscatePanel.Visible = false;
-            if (Settings.Instance.SyncDirection == Sync.Direction.Bidirectional) {
-                tbCreatedItemsOnly.SelectedIndex = Settings.Instance.CreatedItemsOnly ? 1 : 0;
-                if (Settings.Instance.TargetCalendar.Id == Sync.Direction.OutlookToGoogle.Id) tbTargetCalendar.SelectedIndex = 0;
-                if (Settings.Instance.TargetCalendar.Id == Sync.Direction.GoogleToOutlook.Id) tbTargetCalendar.SelectedIndex = 1;
+            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+                tbCreatedItemsOnly.SelectedIndex = Settings.Instance.Calendar.CreatedItemsOnly ? 1 : 0;
+                if (Settings.Instance.Calendar.TargetCalendar.Id == Sync.Direction.OutlookToGoogle.Id) tbTargetCalendar.SelectedIndex = 0;
+                if (Settings.Instance.Calendar.TargetCalendar.Id == Sync.Direction.GoogleToOutlook.Id) tbTargetCalendar.SelectedIndex = 1;
             } else {
                 tbCreatedItemsOnly.SelectedIndex = 0;
                 tbTargetCalendar.SelectedIndex = 2;
             }
             tbCreatedItemsOnly_SelectedItemChanged(null, null);
             tbTargetCalendar_SelectedItemChanged(null, null);
-            cbPrivate.Checked = Settings.Instance.SetEntriesPrivate;
-            cbAvailable.Checked = Settings.Instance.SetEntriesAvailable;
-            cbColour.Checked = Settings.Instance.SetEntriesColour;
+            cbPrivate.Checked = Settings.Instance.Calendar.SetEntriesPrivate;
+            cbAvailable.Checked = Settings.Instance.Calendar.SetEntriesAvailable;
+            cbColour.Checked = Settings.Instance.Calendar.SetEntriesColour;
             foreach (Extensions.ColourPicker.ColourInfo cInfo in ddCategoryColour.Items) {
-                if (cInfo.OutlookCategory.ToString() == Settings.Instance.SetEntriesColourValue &&
-                    cInfo.Text == Settings.Instance.SetEntriesColourName) {
+                if (cInfo.OutlookCategory.ToString() == Settings.Instance.Calendar.SetEntriesColourValue &&
+                    cInfo.Text == Settings.Instance.Calendar.SetEntriesColourName) {
                     ddCategoryColour.SelectedItem = cInfo;
                 }
             }
@@ -308,50 +308,50 @@ namespace OutlookGoogleCalendarSync.Forms {
             //Obfuscate Direction dropdown
             for (int i = 0; i < cbObfuscateDirection.Items.Count; i++) {
                 Sync.Direction sd = (cbObfuscateDirection.Items[i] as Sync.Direction);
-                if (sd.Id == Settings.Instance.Obfuscation.Direction.Id) {
+                if (sd.Id == Settings.Instance.Calendar.Obfuscation.Direction.Id) {
                     cbObfuscateDirection.SelectedIndex = i;
                 }
             }
             if (cbObfuscateDirection.SelectedIndex == -1) cbObfuscateDirection.SelectedIndex = 0;
-            cbObfuscateDirection.Enabled = Settings.Instance.SyncDirection == Sync.Direction.Bidirectional;
-            Settings.Instance.Obfuscation.LoadRegex(dgObfuscateRegex);
+            cbObfuscateDirection.Enabled = Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional;
+            Settings.Instance.Calendar.Obfuscation.LoadRegex(dgObfuscateRegex);
             this.gbSyncOptions_How.ResumeLayout();
             #endregion
             #region When
             this.gbSyncOptions_When.SuspendLayout();
             tbDaysInThePast.Text = Settings.Instance.Calendar.DaysInThePast.ToString();
-            tbDaysInTheFuture.Text = Settings.Instance.DaysInTheFuture.ToString();
+            tbDaysInTheFuture.Text = Settings.Instance.Calendar.DaysInTheFuture.ToString();
             if (Settings.Instance.UsingPersonalAPIkeys()) {
                 tbDaysInTheFuture.Maximum = 365*10;
                 tbDaysInThePast.Maximum = 365*10;
             }
             tbInterval.ValueChanged -= new System.EventHandler(this.tbMinuteOffsets_ValueChanged);
-            tbInterval.Value = Settings.Instance.SyncInterval;
+            tbInterval.Value = Settings.Instance.Calendar.SyncInterval;
             tbInterval.ValueChanged += new System.EventHandler(this.tbMinuteOffsets_ValueChanged);
             cbIntervalUnit.SelectedIndexChanged -= new System.EventHandler(this.cbIntervalUnit_SelectedIndexChanged);
-            cbIntervalUnit.Text = Settings.Instance.SyncIntervalUnit;
+            cbIntervalUnit.Text = Settings.Instance.Calendar.SyncIntervalUnit;
             cbIntervalUnit.SelectedIndexChanged += new System.EventHandler(this.cbIntervalUnit_SelectedIndexChanged);
-            cbOutlookPush.Checked = Settings.Instance.OutlookPush;
+            cbOutlookPush.Checked = Settings.Instance.Calendar.OutlookPush;
             this.gbSyncOptions_When.ResumeLayout();
             #endregion
             #region What
             this.gbSyncOptions_What.SuspendLayout();
-            cbLocation.Checked = Settings.Instance.AddLocation;
-            cbAddDescription.Checked = Settings.Instance.AddDescription;
-            cbAddDescription_OnlyToGoogle.Checked = Settings.Instance.AddDescription_OnlyToGoogle;
-            cbAddAttendees.Checked = Settings.Instance.AddAttendees;
-            cbCloakEmail.Checked = Settings.Instance.CloakEmail;
-            cbCloakEmail.Visible = cbAddAttendees.Checked && Settings.Instance.SyncDirection != Sync.Direction.GoogleToOutlook;
-            cbAddReminders.Checked = Settings.Instance.AddReminders;
-            cbUseGoogleDefaultReminder.Checked = Settings.Instance.UseGoogleDefaultReminder;
-            cbUseOutlookDefaultReminder.Checked = Settings.Instance.UseOutlookDefaultReminder;
-            cbReminderDND.Enabled = Settings.Instance.AddReminders;
-            cbReminderDND.Checked = Settings.Instance.ReminderDND;
-            dtDNDstart.Enabled = Settings.Instance.AddReminders;
-            dtDNDend.Enabled = Settings.Instance.AddReminders;
-            dtDNDstart.Value = Settings.Instance.ReminderDNDstart;
-            dtDNDend.Value = Settings.Instance.ReminderDNDend;
-            cbAddColours.Checked = Settings.Instance.AddColours;
+            cbLocation.Checked = Settings.Instance.Calendar.AddLocation;
+            cbAddDescription.Checked = Settings.Instance.Calendar.AddDescription;
+            cbAddDescription_OnlyToGoogle.Checked = Settings.Instance.Calendar.AddDescription_OnlyToGoogle;
+            cbAddAttendees.Checked = Settings.Instance.Calendar.AddAttendees;
+            cbCloakEmail.Checked = Settings.Instance.Calendar.CloakEmail;
+            cbCloakEmail.Visible = cbAddAttendees.Checked && Settings.Instance.Calendar.SyncDirection != Sync.Direction.GoogleToOutlook;
+            cbAddReminders.Checked = Settings.Instance.Calendar.AddReminders;
+            cbUseGoogleDefaultReminder.Checked = Settings.Instance.Calendar.UseGoogleDefaultReminder;
+            cbUseOutlookDefaultReminder.Checked = Settings.Instance.Calendar.UseOutlookDefaultReminder;
+            cbReminderDND.Enabled = Settings.Instance.Calendar.AddReminders;
+            cbReminderDND.Checked = Settings.Instance.Calendar.ReminderDND;
+            dtDNDstart.Enabled = Settings.Instance.Calendar.AddReminders;
+            dtDNDend.Enabled = Settings.Instance.Calendar.AddReminders;
+            dtDNDstart.Value = Settings.Instance.Calendar.ReminderDNDstart;
+            dtDNDend.Value = Settings.Instance.Calendar.ReminderDNDend;
+            cbAddColours.Checked = Settings.Instance.Calendar.AddColours;
             this.gbSyncOptions_What.ResumeLayout();
             #endregion
             #endregion
@@ -406,7 +406,7 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             cbAlphaReleases.Checked = Settings.Instance.AlphaReleases;
             #endregion
-            FeaturesBlockedByCorpPolicy(Settings.Instance.OutlookGalBlocked);
+            FeaturesBlockedByCorpPolicy(Settings.Instance.Calendar.OutlookGalBlocked);
             this.ResumeLayout();
         }
 
@@ -824,7 +824,7 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             if (rbOutlookDefaultMB.Checked) {
                 enableOutlookSettingsUI(false);
-                Settings.Instance.OutlookService = OutlookOgcs.Calendar.Service.DefaultMailbox;
+                Settings.Instance.Calendar.OutlookService = OutlookOgcs.Calendar.Service.DefaultMailbox;
                 OutlookOgcs.Calendar.Instance.Reset();
                 //Update available calendars
                 cbOutlookCalendars.DataSource = new BindingSource(OutlookOgcs.Calendar.Instance.CalendarFolders, null);
@@ -837,26 +837,26 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             if (rbOutlookAltMB.Checked) {
                 enableOutlookSettingsUI(false);
-                Settings.Instance.OutlookService = OutlookOgcs.Calendar.Service.AlternativeMailbox;
-                Settings.Instance.MailboxName = ddMailboxName.Text;
+                Settings.Instance.Calendar.OutlookService = OutlookOgcs.Calendar.Service.AlternativeMailbox;
+                Settings.Instance.Calendar.MailboxName = ddMailboxName.Text;
                 OutlookOgcs.Calendar.Instance.Reset();
                 //Update available calendars
                 cbOutlookCalendars.DataSource = new BindingSource(OutlookOgcs.Calendar.Instance.CalendarFolders, null);
                 refreshCategories();
             }
-            Settings.Instance.MailboxName = (rbOutlookAltMB.Checked ? ddMailboxName.Text : "");
+            Settings.Instance.Calendar.MailboxName = (rbOutlookAltMB.Checked ? ddMailboxName.Text : "");
         }
 
         private void rbOutlookSharedCal_CheckedChanged(object sender, EventArgs e) {
             if (!this.Visible) return;
 
-            if (rbOutlookSharedCal.Checked && Settings.Instance.OutlookGalBlocked) {
+            if (rbOutlookSharedCal.Checked && Settings.Instance.Calendar.OutlookGalBlocked) {
                 rbOutlookSharedCal.Checked = false;
                 return;
             }
             if (rbOutlookSharedCal.Checked) {
                 enableOutlookSettingsUI(false);
-                Settings.Instance.OutlookService = OutlookOgcs.Calendar.Service.SharedCalendar;
+                Settings.Instance.Calendar.OutlookService = OutlookOgcs.Calendar.Service.SharedCalendar;
                 OutlookOgcs.Calendar.Instance.Reset();
                 //Update available calendars
                 cbOutlookCalendars.DataSource = new BindingSource(OutlookOgcs.Calendar.Instance.CalendarFolders, null);
@@ -865,9 +865,9 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void ddMailboxName_SelectedIndexChanged(object sender, EventArgs e) {
-            if (this.Visible && Settings.Instance.MailboxName != ddMailboxName.Text) {
+            if (this.Visible && Settings.Instance.Calendar.MailboxName != ddMailboxName.Text) {
                 rbOutlookAltMB.Checked = true;
-                Settings.Instance.MailboxName = ddMailboxName.Text;
+                Settings.Instance.Calendar.MailboxName = ddMailboxName.Text;
                 enableOutlookSettingsUI(false);
                 OutlookOgcs.Calendar.Instance.Reset();
                 refreshCategories();
@@ -882,8 +882,8 @@ namespace OutlookGoogleCalendarSync.Forms {
         #region Categories
         private void cbCategoryFilter_SelectedIndexChanged(object sender, EventArgs e) {
             if (!this.Visible) return;
-            Settings.Instance.CategoriesRestrictBy = (cbCategoryFilter.SelectedItem.ToString() == "Include") ?
-                Settings.RestrictBy.Include : Settings.RestrictBy.Exclude;
+            Settings.Instance.Calendar.CategoriesRestrictBy = (cbCategoryFilter.SelectedItem.ToString() == "Include") ?
+                SettingsStore.Calendar.RestrictBy.Include : SettingsStore.Calendar.RestrictBy.Exclude;
             //Invert selection
             for (int i = 0; i < clbCategories.Items.Count; i++) {
                 clbCategories.SetItemChecked(i, !clbCategories.CheckedIndices.Contains(i));
@@ -894,9 +894,9 @@ namespace OutlookGoogleCalendarSync.Forms {
         private void clbCategories_SelectedIndexChanged(object sender, EventArgs e) {
             if (!this.Visible) return;
 
-            Settings.Instance.Categories.Clear();
+            Settings.Instance.Calendar.Categories.Clear();
             foreach (object item in clbCategories.CheckedItems) {
-                Settings.Instance.Categories.Add(item.ToString());
+                Settings.Instance.Calendar.Categories.Add(item.ToString());
             }
         }
 
@@ -924,7 +924,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         #endregion
 
         private void cbOnlyRespondedInvites_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.OnlyRespondedInvites = cbOnlyRespondedInvites.Checked;
+            Settings.Instance.Calendar.OnlyRespondedInvites = cbOnlyRespondedInvites.Checked;
         }
 
         #region Datetime Format
@@ -932,7 +932,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             KeyValuePair<string, string> selectedFormat = (KeyValuePair<string, string>)cbOutlookDateFormat.SelectedItem;
             if (selectedFormat.Key != "Custom") {
                 tbOutlookDateFormat.Text = selectedFormat.Value;
-                if (this.Visible) Settings.Instance.OutlookDateFormat = tbOutlookDateFormat.Text;
+                if (this.Visible) Settings.Instance.Calendar.OutlookDateFormat = tbOutlookDateFormat.Text;
             }
             tbOutlookDateFormat.ReadOnly = (selectedFormat.Key != "Custom");
         }
@@ -949,15 +949,15 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (String.IsNullOrEmpty(tbOutlookDateFormat.Text) || tbOutlookDateFormatResult.Text == "Not a valid date format") {
                 cbOutlookDateFormat.SelectedIndex = 0;
             }
-            Settings.Instance.OutlookDateFormat = tbOutlookDateFormat.Text;
+            Settings.Instance.Calendar.OutlookDateFormat = tbOutlookDateFormat.Text;
         }
 
         private void btTestOutlookFilter_Click(object sender, EventArgs e) {
             log.Debug("Testing the Outlook filter string.");
             int filterCount = OutlookOgcs.Calendar.Instance.FilterCalendarEntries(OutlookOgcs.Calendar.Instance.UseOutlookCalendar.Items, false).Count();
             String msg = "The format '" + tbOutlookDateFormat.Text + "' returns " + filterCount + " calendar items within the date range ";
-            msg += Settings.Instance.SyncStart.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern);
-            msg += " and " + Settings.Instance.SyncEnd.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern);
+            msg += Settings.Instance.Calendar.SyncStart.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern);
+            msg += " and " + Settings.Instance.Calendar.SyncEnd.ToString(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern);
 
             log.Info(msg);
             MessageBox.Show(msg, "Date-Time Format Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1014,7 +1014,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 calendars.Sort((x, y) => x.Name.CompareTo(y.Name));
                 foreach (GoogleCalendarListEntry mcle in calendars) {
                     cbGoogleCalendars.Items.Add(mcle);
-                    if (cbGoogleCalendars.SelectedIndex == -1 && mcle.Id == Settings.Instance.UseGoogleCalendar.Id)
+                    if (cbGoogleCalendars.SelectedIndex == -1 && mcle.Id == Settings.Instance.Calendar.UseGoogleCalendar.Id)
                         cbGoogleCalendars.SelectedItem = mcle;
                 }
                 if (cbGoogleCalendars.SelectedIndex == -1 ) {
@@ -1030,7 +1030,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void cbGoogleCalendars_SelectedIndexChanged(object sender, EventArgs e) {
-            Settings.Instance.UseGoogleCalendar = (GoogleCalendarListEntry)cbGoogleCalendars.SelectedItem;
+            Settings.Instance.Calendar.UseGoogleCalendar = (GoogleCalendarListEntry)cbGoogleCalendars.SelectedItem;
         }
 
         private void btResetGCal_Click(object sender, EventArgs e) {
@@ -1038,8 +1038,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 "Useful if you want to start syncing to a different account.",
                 "Reset Google account?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes) {
                 log.Info("User requested reset of Google authentication details.");
-                Settings.Instance.UseGoogleCalendar.Id = null;
-                Settings.Instance.UseGoogleCalendar.Name = null;
+                Settings.Instance.Calendar.UseGoogleCalendar.Id = null;
+                Settings.Instance.Calendar.UseGoogleCalendar.Name = null;
                 this.cbGoogleCalendars.Items.Clear();
                 this.tbClientID.ReadOnly = false;
                 this.tbClientSecret.ReadOnly = false;
@@ -1129,8 +1129,8 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         #region How
         private void syncDirection_SelectedIndexChanged(object sender, EventArgs e) {
-            Settings.Instance.SyncDirection = (Sync.Direction)syncDirection.SelectedItem;
-            if (Settings.Instance.SyncDirection == Sync.Direction.Bidirectional) {
+            Settings.Instance.Calendar.SyncDirection = (Sync.Direction)syncDirection.SelectedItem;
+            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
                 cbObfuscateDirection.Enabled = true;
                 cbObfuscateDirection.SelectedIndex = Sync.Direction.OutlookToGoogle.Id - 1;
 
@@ -1142,7 +1142,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 tbTargetCalendar.Enabled = cbPrivate.Checked || cbAvailable.Checked;
             } else {
                 cbObfuscateDirection.Enabled = false;
-                cbObfuscateDirection.SelectedIndex = Settings.Instance.SyncDirection.Id - 1;
+                cbObfuscateDirection.SelectedIndex = Settings.Instance.Calendar.SyncDirection.Id - 1;
 
                 tbCreatedItemsOnly.Enabled = false;
                 tbCreatedItemsOnly.SelectedIndex = 0;
@@ -1153,7 +1153,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 tbTargetCalendar.SelectedIndex = 2;
                 tbTargetCalendar.Enabled = false;
             }
-            if (Settings.Instance.SyncDirection == Sync.Direction.GoogleToOutlook) {
+            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.GoogleToOutlook) {
                 Sync.Engine.Instance.DeregisterForPushSync();
                 this.cbOutlookPush.Checked = false;
                 this.cbOutlookPush.Enabled = false;
@@ -1162,7 +1162,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 this.dtDNDend.Visible = false;
                 this.lDNDand.Visible = false;
             }
-            if (Settings.Instance.SyncDirection == Sync.Direction.OutlookToGoogle) {
+            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.OutlookToGoogle) {
                 this.cbOutlookPush.Enabled = true;
                 this.cbReminderDND.Visible = true;
                 this.dtDNDstart.Visible = true;
@@ -1175,20 +1175,20 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void cbMergeItems_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.MergeItems = cbMergeItems.Checked;
+            Settings.Instance.Calendar.MergeItems = cbMergeItems.Checked;
         }
 
         private void cbConfirmOnDelete_CheckedChanged(object sender, System.EventArgs e) {
-            Settings.Instance.ConfirmOnDelete = cbConfirmOnDelete.Checked;
+            Settings.Instance.Calendar.ConfirmOnDelete = cbConfirmOnDelete.Checked;
         }
 
         private void cbDisableDeletion_CheckedChanged(object sender, System.EventArgs e) {
-            Settings.Instance.DisableDelete = cbDisableDeletion.Checked;
+            Settings.Instance.Calendar.DisableDelete = cbDisableDeletion.Checked;
             cbConfirmOnDelete.Enabled = !cbDisableDeletion.Checked;
         }
 
         private void cbOfuscate_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.Obfuscation.Enabled = cbOfuscate.Checked;
+            Settings.Instance.Calendar.Obfuscation.Enabled = cbOfuscate.Checked;
         }
 
         private void btObfuscateRules_Click(object sender, EventArgs e) {
@@ -1228,7 +1228,7 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         #region More Options Panel
         private void tbCreatedItemsOnly_SelectedItemChanged(object sender, EventArgs e) {
-            Settings.Instance.CreatedItemsOnly = tbCreatedItemsOnly.SelectedIndex == 1;
+            Settings.Instance.Calendar.CreatedItemsOnly = tbCreatedItemsOnly.SelectedIndex == 1;
             if (tbCreatedItemsOnly.SelectedIndex == 0)
                 lTargetSyncCondition.Text = "synced to";
             else
@@ -1239,44 +1239,44 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (!this.Visible) return;
 
             switch (tbTargetCalendar.Text) {
-                case "Google calendar": Settings.Instance.TargetCalendar = Sync.Direction.OutlookToGoogle; break;
-                case "Outlook calendar": Settings.Instance.TargetCalendar = Sync.Direction.GoogleToOutlook; break;
-                case "target calendar": Settings.Instance.TargetCalendar = Settings.Instance.SyncDirection; break;
+                case "Google calendar": Settings.Instance.Calendar.TargetCalendar = Sync.Direction.OutlookToGoogle; break;
+                case "Outlook calendar": Settings.Instance.Calendar.TargetCalendar = Sync.Direction.GoogleToOutlook; break;
+                case "target calendar": Settings.Instance.Calendar.TargetCalendar = Settings.Instance.Calendar.SyncDirection; break;
             }
         }
 
         private void cbPrivate_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.SetEntriesPrivate = cbPrivate.Checked;
-            tbTargetCalendar.Enabled = cbPrivate.Checked && Settings.Instance.SyncDirection == Sync.Direction.Bidirectional;
+            Settings.Instance.Calendar.SetEntriesPrivate = cbPrivate.Checked;
+            tbTargetCalendar.Enabled = cbPrivate.Checked && Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional;
         }
 
         private void cbAvailable_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.SetEntriesAvailable = cbAvailable.Checked;
-            tbTargetCalendar.Enabled = cbAvailable.Checked && Settings.Instance.SyncDirection == Sync.Direction.Bidirectional;
+            Settings.Instance.Calendar.SetEntriesAvailable = cbAvailable.Checked;
+            tbTargetCalendar.Enabled = cbAvailable.Checked && Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional;
         }
 
         private void cbColour_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.SetEntriesColour = cbColour.Checked;
+            Settings.Instance.Calendar.SetEntriesColour = cbColour.Checked;
             ddCategoryColour.Enabled = cbColour.Checked;
-            tbTargetCalendar.Enabled = cbColour.Checked && Settings.Instance.SyncDirection == Sync.Direction.Bidirectional;
+            tbTargetCalendar.Enabled = cbColour.Checked && Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional;
         }
 
         private void ddCategoryColour_SelectedIndexChanged(object sender, EventArgs e) {
             if (!this.Visible) return;
 
-            Settings.Instance.SetEntriesColourValue = ddCategoryColour.SelectedItem.OutlookCategory.ToString();
-            Settings.Instance.SetEntriesColourName = ddCategoryColour.SelectedItem.Text;
+            Settings.Instance.Calendar.SetEntriesColourValue = ddCategoryColour.SelectedItem.OutlookCategory.ToString();
+            Settings.Instance.Calendar.SetEntriesColourName = ddCategoryColour.SelectedItem.Text;
         }
         #endregion
 
         #region Obfuscation Panel
         private void cbObfuscateDirection_SelectedIndexChanged(object sender, EventArgs e) {
             if (this.Visible)
-                Settings.Instance.Obfuscation.Direction = (Sync.Direction)cbObfuscateDirection.SelectedItem;
+                Settings.Instance.Calendar.Obfuscation.Direction = (Sync.Direction)cbObfuscateDirection.SelectedItem;
         }
 
         private void dgObfuscateRegex_Leave(object sender, EventArgs e) {
-            Settings.Instance.Obfuscation.SaveRegex(dgObfuscateRegex);
+            Settings.Instance.Calendar.Obfuscation.SaveRegex(dgObfuscateRegex);
         }
         #endregion
         #endregion
@@ -1286,7 +1286,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             get {
                 if (System.Diagnostics.Debugger.IsAttached) return 1;
                 else {
-                    if (Settings.Instance.OutlookPush && Settings.Instance.SyncDirection != Sync.Direction.GoogleToOutlook)
+                    if (Settings.Instance.Calendar.OutlookPush && Settings.Instance.Calendar.SyncDirection != Sync.Direction.GoogleToOutlook)
                         return 120;
                     else
                         return 15;
@@ -1302,7 +1302,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void tbDaysInTheFuture_ValueChanged(object sender, EventArgs e) {
-            Settings.Instance.DaysInTheFuture = (int)tbDaysInTheFuture.Value;
+            Settings.Instance.Calendar.DaysInTheFuture = (int)tbDaysInTheFuture.Value;
             if (this.Visible && !Settings.Instance.UsingPersonalAPIkeys() && tbDaysInTheFuture.Value == tbDaysInTheFuture.Maximum) {
                 this.ToolTips.Show("Limited to 1 year unless personal API keys are used. See 'Developer Options' on Google tab.", tbDaysInTheFuture);
             }
@@ -1327,7 +1327,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 tbInterval.ValueChanged += new System.EventHandler(this.tbMinuteOffsets_ValueChanged);
             }
 
-            Settings.Instance.SyncInterval = (int)tbInterval.Value;
+            Settings.Instance.Calendar.SyncInterval = (int)tbInterval.Value;
             Sync.Engine.Instance.OgcsTimer.SetNextSync();
             NotificationTray.UpdateAutoSyncItems();
         }
@@ -1336,12 +1336,12 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (cbIntervalUnit.Text == "Minutes" && (int)tbInterval.Value > 0 && (int)tbInterval.Value < MinSyncMinutes) {
                 tbInterval.Value = MinSyncMinutes;
             }
-            Settings.Instance.SyncIntervalUnit = cbIntervalUnit.Text;
+            Settings.Instance.Calendar.SyncIntervalUnit = cbIntervalUnit.Text;
             Sync.Engine.Instance.OgcsTimer.SetNextSync();
         }
 
         private void cbOutlookPush_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.OutlookPush = cbOutlookPush.Checked;
+            Settings.Instance.Calendar.OutlookPush = cbOutlookPush.Checked;
             if (this.Visible) {
                 if (tbInterval.Value != 0) tbMinuteOffsets_ValueChanged(null, null);
                 if (cbOutlookPush.Checked) Sync.Engine.Instance.RegisterForPushSync();
@@ -1362,9 +1362,9 @@ namespace OutlookGoogleCalendarSync.Forms {
             switch (info) {
                 case "Description": {
                         tbWhatHelp.Text = "Google event descriptions don't support rich text (RTF) and truncate at 8Kb. So make sure you REALLY want to 2-way sync descriptions!";
-                        Boolean visible = (Settings.Instance.AddDescription &&
-                            Settings.Instance.SyncDirection == Sync.Direction.Bidirectional);
-                        WhatPostit.Visible = visible && !Settings.Instance.AddDescription_OnlyToGoogle;
+                        Boolean visible = (Settings.Instance.Calendar.AddDescription &&
+                            Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional);
+                        WhatPostit.Visible = visible && !Settings.Instance.Calendar.AddDescription_OnlyToGoogle;
                         cbAddDescription_OnlyToGoogle.Visible = visible;
                         break;
                     }
@@ -1381,66 +1381,66 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void cbLocation_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.AddLocation = cbLocation.Checked;
+            Settings.Instance.Calendar.AddLocation = cbLocation.Checked;
         }
 
         private void cbAddDescription_CheckedChanged(object sender, EventArgs e) {
-            if (cbAddDescription.Checked && Settings.Instance.OutlookGalBlocked) {
+            if (cbAddDescription.Checked && Settings.Instance.Calendar.OutlookGalBlocked) {
                 cbAddDescription.Checked = false;
                 return;
             }
-            Settings.Instance.AddDescription = cbAddDescription.Checked;
+            Settings.Instance.Calendar.AddDescription = cbAddDescription.Checked;
             cbAddDescription_OnlyToGoogle.Enabled = cbAddDescription.Checked;
             showWhatPostit("Description");
         }
         private void cbAddDescription_OnlyToGoogle_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.AddDescription_OnlyToGoogle = cbAddDescription_OnlyToGoogle.Checked;
+            Settings.Instance.Calendar.AddDescription_OnlyToGoogle = cbAddDescription_OnlyToGoogle.Checked;
             showWhatPostit("Description");
         }
 
         private void cbAddReminders_CheckedChanged(object sender, EventArgs e) {
-            if (this.Visible) Settings.Instance.AddReminders = cbAddReminders.Checked;
-            cbUseGoogleDefaultReminder.Enabled = Settings.Instance.SyncDirection != Sync.Direction.GoogleToOutlook;
-            cbUseOutlookDefaultReminder.Enabled = Settings.Instance.SyncDirection != Sync.Direction.OutlookToGoogle;
+            if (this.Visible) Settings.Instance.Calendar.AddReminders = cbAddReminders.Checked;
+            cbUseGoogleDefaultReminder.Enabled = Settings.Instance.Calendar.SyncDirection != Sync.Direction.GoogleToOutlook;
+            cbUseOutlookDefaultReminder.Enabled = Settings.Instance.Calendar.SyncDirection != Sync.Direction.OutlookToGoogle;
             cbReminderDND.Enabled = cbAddReminders.Checked;
             dtDNDstart.Enabled = cbAddReminders.Checked;
             dtDNDend.Enabled = cbAddReminders.Checked;
             lDNDand.Enabled = cbAddReminders.Checked;
         }
         private void cbUseGoogleDefaultReminder_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.UseGoogleDefaultReminder = cbUseGoogleDefaultReminder.Checked;
+            Settings.Instance.Calendar.UseGoogleDefaultReminder = cbUseGoogleDefaultReminder.Checked;
         }
         private void cbUseOutlookDefaultReminder_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.UseOutlookDefaultReminder = cbUseOutlookDefaultReminder.Checked;
+            Settings.Instance.Calendar.UseOutlookDefaultReminder = cbUseOutlookDefaultReminder.Checked;
         }
         private void cbReminderDND_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.ReminderDND = cbReminderDND.Checked;
+            Settings.Instance.Calendar.ReminderDND = cbReminderDND.Checked;
         }
         private void dtDNDstart_ValueChanged(object sender, EventArgs e) {
-            Settings.Instance.ReminderDNDstart = dtDNDstart.Value;
+            Settings.Instance.Calendar.ReminderDNDstart = dtDNDstart.Value;
         }
         private void dtDNDend_ValueChanged(object sender, EventArgs e) {
-            Settings.Instance.ReminderDNDend = dtDNDend.Value;
+            Settings.Instance.Calendar.ReminderDNDend = dtDNDend.Value;
         }
 
         private void cbAddAttendees_CheckedChanged(object sender, EventArgs e) {
-            if (cbAddAttendees.Checked && Settings.Instance.OutlookGalBlocked) {
+            if (cbAddAttendees.Checked && Settings.Instance.Calendar.OutlookGalBlocked) {
                 cbAddAttendees.Checked = false;
                 cbCloakEmail.Enabled = false;
                 return;
             }
-            if (this.Visible) Settings.Instance.AddAttendees = cbAddAttendees.Checked;
-            cbCloakEmail.Visible = Settings.Instance.SyncDirection != Sync.Direction.GoogleToOutlook;
+            if (this.Visible) Settings.Instance.Calendar.AddAttendees = cbAddAttendees.Checked;
+            cbCloakEmail.Visible = Settings.Instance.Calendar.SyncDirection != Sync.Direction.GoogleToOutlook;
             cbCloakEmail.Enabled = cbAddAttendees.Checked;
             if (cbAddAttendees.Checked && string.IsNullOrEmpty(OutlookOgcs.Calendar.Instance.IOutlook.CurrentUserSMTP())) {
                 OutlookOgcs.Calendar.Instance.IOutlook.GetCurrentUser(null);
             }
         }
         private void cbCloakEmail_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.CloakEmail = cbCloakEmail.Checked;
+            Settings.Instance.Calendar.CloakEmail = cbCloakEmail.Checked;
         }
         private void cbAddColours_CheckedChanged(object sender, EventArgs e) {
-            Settings.Instance.AddColours = cbAddColours.Checked;
+            Settings.Instance.Calendar.AddColours = cbAddColours.Checked;
         }
         #endregion
         #endregion

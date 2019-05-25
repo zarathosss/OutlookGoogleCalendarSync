@@ -95,7 +95,7 @@ namespace OutlookGoogleCalendarSync {
 
         public void UpdateAutoSyncItems() {
             Boolean autoSyncing = (Sync.Engine.Instance.OgcsTimer == null 
-                ? Settings.Instance.SyncInterval != 0 || Settings.Instance.OutlookPush
+                ? Settings.Instance.Calendar.SyncInterval != 0 || Settings.Instance.Calendar.OutlookPush
                 : Sync.Engine.Instance.OgcsTimer.Running());
 
             UpdateItem("autoSyncToggle", autoSyncing ? "Disable" : "Enable");
@@ -118,7 +118,7 @@ namespace OutlookGoogleCalendarSync {
             String menuItemText = (sender as ToolStripMenuItem).Text;
             Forms.Main.Instance.Console.Update("Automatic sync "+ menuItemText.ToLower() +"d.");
             if (menuItemText == "Enable") {
-                if (Settings.Instance.SyncInterval == 0) {
+                if (Settings.Instance.Calendar.SyncInterval == 0) {
                     log.Debug("Switching on automatic syncing - hourly.");
                     Forms.Main.Instance.cbIntervalUnit.SelectedItem = "Hours";
                     Forms.Main.Instance.tbInterval.Value = 1;
@@ -128,7 +128,7 @@ namespace OutlookGoogleCalendarSync {
                 if (Sync.Engine.Instance.OgcsTimer == null) Sync.Engine.Instance.OgcsTimer = new Sync.SyncTimer();
                 Sync.Engine.Instance.OgcsTimer.Switch(true);
                 Forms.Main.Instance.StrikeOutNextSyncVal(false);
-                if (Settings.Instance.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
+                if (Settings.Instance.Calendar.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
                 UpdateAutoSyncItems();
             } else {
                 if (Sync.Engine.Instance.OgcsTimer == null) {
@@ -137,7 +137,7 @@ namespace OutlookGoogleCalendarSync {
                 }
                 Sync.Engine.Instance.OgcsTimer.Switch(false);
                 Forms.Main.Instance.StrikeOutNextSyncVal(true);
-                if (Settings.Instance.OutlookPush) Sync.Engine.Instance.DeregisterForPushSync();
+                if (Settings.Instance.Calendar.OutlookPush) Sync.Engine.Instance.DeregisterForPushSync();
                 UpdateAutoSyncItems();
             }
         }
@@ -178,7 +178,7 @@ namespace OutlookGoogleCalendarSync {
                 return;
             }
             Sync.Engine.Instance.OgcsTimer.SetNextSync();
-            if (Settings.Instance.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
+            if (Settings.Instance.Calendar.OutlookPush) Sync.Engine.Instance.RegisterForPushSync();
             UpdateItem("delayRemove", enabled: false);
         }
 

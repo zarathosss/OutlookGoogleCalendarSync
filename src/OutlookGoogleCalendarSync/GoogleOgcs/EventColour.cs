@@ -42,7 +42,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             colourPalette = new List<Palette>();
             try {
                 colours = GoogleOgcs.Calendar.Instance.Service.Colors.Get().Execute();
-                calendarColour = GoogleOgcs.Calendar.Instance.Service.CalendarList.Get(Settings.Instance.UseGoogleCalendar.Id).Execute();
+                calendarColour = GoogleOgcs.Calendar.Instance.Service.CalendarList.Get(Settings.Instance.Calendar.UseGoogleCalendar.Id).Execute();
             } catch (System.Exception ex) {
                 log.Error("Failed retrieving calendar Event colours.");
                 OGCSexception.Analyse(ex);

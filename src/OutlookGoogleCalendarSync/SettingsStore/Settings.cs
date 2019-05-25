@@ -76,50 +76,12 @@ namespace OutlookGoogleCalendarSync {
             assignedClientSecret = "";
             PersonalClientIdentifier = "";
             PersonalClientSecret = "";
-            OutlookService = OutlookOgcs.Calendar.Service.DefaultMailbox;
-            MailboxName = "";
-            SharedCalendar = "";
-            UseOutlookCalendar = new OutlookCalendarListEntry();
-            CategoriesRestrictBy = RestrictBy.Exclude;
-            Categories = new System.Collections.Generic.List<String>();
-            OnlyRespondedInvites = false;
-            OutlookDateFormat = "g";
-            outlookGalBlocked = false;
 
-            UseGoogleCalendar = new GoogleCalendarListEntry();
             apiLimit_inEffect = false;
             apiLimit_lastHit = DateTime.Parse("01-Jan-2000");
             GaccountEmail = "";
-            CloakEmail = true;
 
             Calendar = new SettingsStore.Calendar();
-            SyncDirection = Sync.Direction.OutlookToGoogle;
-            DaysInTheFuture = 60;
-            SyncInterval = 0;
-            SyncIntervalUnit = "Hours";
-            OutlookPush = false;
-            AddLocation = true;
-            AddDescription = true;
-            AddDescription_OnlyToGoogle = true;
-            AddReminders = false;
-            UseGoogleDefaultReminder = false;
-            UseOutlookDefaultReminder = false;
-            ReminderDND = false;
-            ReminderDNDstart = DateTime.Now.Date.AddHours(22);
-            ReminderDNDend = DateTime.Now.Date.AddDays(1).AddHours(6);
-            AddAttendees = false;
-            AddColours = false;
-            MergeItems = true;
-            DisableDelete = true;
-            ConfirmOnDelete = true;
-            TargetCalendar = Sync.Direction.OutlookToGoogle;
-            CreatedItemsOnly = true;
-            SetEntriesPrivate = false;
-            SetEntriesAvailable = false;
-            SetEntriesColour = false;
-            SetEntriesColourValue = Microsoft.Office.Interop.Outlook.OlCategoryColor.olCategoryColorNone.ToString();
-            SetEntriesColourName = "None";
-            Obfuscation = new Obfuscate();
 
             MuteClickSounds = false;
             ShowBubbleTooltipWhenSyncing = true;
@@ -141,9 +103,7 @@ namespace OutlookGoogleCalendarSync {
             donor = false;
             hideSplashScreen = false;
             suppressSocialPopup = false;
-
-            ExtirpateOgcsMetadata = false;
-
+            
             lastSyncDate = new DateTime(0);
             completedSyncs = 0;
             VerboseOutput = true;
@@ -162,35 +122,14 @@ namespace OutlookGoogleCalendarSync {
                 instance = value;
             }
         }
-        
-        #region Outlook
-        public enum RestrictBy {
-            Include, Exclude
-        }
-        [DataMember] public OutlookOgcs.Calendar.Service OutlookService { get; set; }
-        [DataMember] public string MailboxName { get; set; }
-        [DataMember] public string SharedCalendar { get; set; }
-        [DataMember] public OutlookCalendarListEntry UseOutlookCalendar { get; set; }
-        [DataMember] public RestrictBy CategoriesRestrictBy { get; set; }
-        [DataMember] public System.Collections.Generic.List<string> Categories { get; set; }
-        [DataMember] public Boolean OnlyRespondedInvites { get; set; }
-        [DataMember] public string OutlookDateFormat { get; set; }
-        private Boolean outlookGalBlocked;
-        [DataMember] public Boolean OutlookGalBlocked {
-            get { return outlookGalBlocked; }
-            set {
-                outlookGalBlocked = value;
-                if (!loading() && Forms.Main.Instance.IsHandleCreated) Forms.Main.Instance.FeaturesBlockedByCorpPolicy(value);
-            }
-        }
-        #endregion
+
         #region Google
         private String assignedClientIdentifier;
         [DataMember] public String AssignedClientIdentifier {
             get { return assignedClientIdentifier; }
             set {
                 assignedClientIdentifier = value.Trim();
-                if (!loading()) XMLManager.ExportElement("AssignedClientIdentifier", value.Trim(), ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AssignedClientIdentifier", value.Trim(), ConfigFile);
             }
         }
         private String assignedClientSecret;
@@ -198,7 +137,7 @@ namespace OutlookGoogleCalendarSync {
             get { return assignedClientSecret; }
             set {
                 assignedClientSecret = value.Trim();
-                if (!loading()) XMLManager.ExportElement("AssignedClientSecret", value.Trim(), ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AssignedClientSecret", value.Trim(), ConfigFile);
             }
         }
         private String personalClientIdentifier;
@@ -214,19 +153,18 @@ namespace OutlookGoogleCalendarSync {
         public Boolean UsingPersonalAPIkeys() {
             return !string.IsNullOrEmpty(PersonalClientIdentifier) && !string.IsNullOrEmpty(PersonalClientSecret);
         }
-        [DataMember] public GoogleCalendarListEntry UseGoogleCalendar { get; set; }
         [DataMember] public Boolean APIlimit_inEffect {
             get { return apiLimit_inEffect; }
             set {
                 apiLimit_inEffect = value;
-                if (!loading()) XMLManager.ExportElement("APIlimit_inEffect", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("APIlimit_inEffect", value, ConfigFile);
             }
         }
         [DataMember] public DateTime APIlimit_lastHit {
             get { return apiLimit_lastHit; }
             set {
                 apiLimit_lastHit = value;
-                if (!loading()) XMLManager.ExportElement("APIlimit_lastHit", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("APIlimit_lastHit", value, ConfigFile);
             }
         }
         [DataMember] public String GaccountEmail { get; set; }
@@ -234,48 +172,12 @@ namespace OutlookGoogleCalendarSync {
             if (string.IsNullOrWhiteSpace(GaccountEmail)) return "<null>";
             return EmailAddress.MaskAddress(GaccountEmail);
         }
-        [DataMember] public Boolean CloakEmail { get; set; }
-        #endregion
-        #region Sync Options
-        //Main
-        public DateTime SyncStart { get { return DateTime.Today.AddDays(-Calendar.DaysInThePast); } }
-        public DateTime SyncEnd { get { return DateTime.Today.AddDays(+DaysInTheFuture + 1); } }
-        [DataMember] public Sync.Direction SyncDirection { get; set; }
-        [DataMember] public int DaysInTheFuture { get; set; }
-        [DataMember] public int SyncInterval { get; set; }
-        [DataMember] public String SyncIntervalUnit { get; set; }
-        [DataMember] public bool OutlookPush { get; set; }
-        [DataMember] public bool AddLocation { get; set; }
-        [DataMember] public bool AddDescription { get; set; }
-        [DataMember] public bool AddDescription_OnlyToGoogle { get; set; }
-        [DataMember] public bool AddReminders { get; set; }
-        [DataMember] public bool UseGoogleDefaultReminder { get; set; }
-        [DataMember] public bool UseOutlookDefaultReminder { get; set; }
-        [DataMember] public bool ReminderDND { get; set; }
-        [DataMember] public DateTime ReminderDNDstart { get; set; }
-        [DataMember] public DateTime ReminderDNDend { get; set; }
-        [DataMember] public bool AddAttendees { get; set; }
-        [DataMember] public bool AddColours { get; set; }
-        [DataMember] public bool MergeItems { get; set; }
-        [DataMember] public bool DisableDelete { get; set; }
-        [DataMember] public bool ConfirmOnDelete { get; set; }
-        [DataMember] public Sync.Direction TargetCalendar { get; set; }
-        [DataMember] public Boolean CreatedItemsOnly { get; set; }
-        [DataMember] public bool SetEntriesPrivate { get; set; }
-        [DataMember] public bool SetEntriesAvailable { get; set; }
-        [DataMember] public bool SetEntriesColour { get; set; }
-        [DataMember] public String SetEntriesColourValue { get; set; }
-        [DataMember] public String SetEntriesColourName { get; set; }
-        
-        //Obfuscation
-        [DataMember] public Obfuscate Obfuscation { get; set; }
-
         #endregion
         #region App behaviour
         [DataMember] public bool HideSplashScreen {
             get { return hideSplashScreen; }
             set {
-                if (!loading() && hideSplashScreen != value) {
+                if (!Settings.Instance.Loading() && hideSplashScreen != value) {
                     XMLManager.ExportElement("HideSplashScreen", value, ConfigFile);
                     if (Forms.Main.Instance != null) Forms.Main.Instance.cbHideSplash.Checked = value;
                 }
@@ -286,7 +188,7 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool SuppressSocialPopup {
             get { return suppressSocialPopup; }
             set {
-                if (!loading() && suppressSocialPopup != value) {
+                if (!Settings.Instance.Loading() && suppressSocialPopup != value) {
                     XMLManager.ExportElement("SuppressSocialPopup", value, ConfigFile);
                     if (Forms.Main.Instance != null) Forms.Main.Instance.cbSuppressSocialPopup.Checked = value;
                 }
@@ -304,7 +206,7 @@ namespace OutlookGoogleCalendarSync {
             get { return portable; }
             set {
                 portable = value;
-                if (!loading()) XMLManager.ExportElement("Portable", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("Portable", value, ConfigFile);
             }
         }
 
@@ -336,7 +238,7 @@ namespace OutlookGoogleCalendarSync {
             get { return alphaReleases; }
             set {
                 alphaReleases = value;
-                if (!loading()) XMLManager.ExportElement("AlphaReleases", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AlphaReleases", value, ConfigFile);
             }
         }
         public Boolean UserIsBenefactor() {
@@ -347,27 +249,23 @@ namespace OutlookGoogleCalendarSync {
             get { return donor; }
             set {
                 donor = value;
-                if (!loading()) XMLManager.ExportElement("Donor", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("Donor", value, ConfigFile);
             }
         }
-        #endregion
-        #region Advanced - Non GUI
-        [DataMember]
-        public Boolean ExtirpateOgcsMetadata { get; private set; }
         #endregion
 
         [DataMember] public DateTime LastSyncDate {
             get { return lastSyncDate; }
             set {
                 lastSyncDate = value;
-                if (!loading()) XMLManager.ExportElement("LastSyncDate", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("LastSyncDate", value, ConfigFile);
             }
         }
         [DataMember] public Int32 CompletedSyncs {
             get { return completedSyncs; }
             set {
                 completedSyncs = value;
-                if (!loading()) XMLManager.ExportElement("CompletedSyncs", value, ConfigFile);
+                if (!Settings.Instance.Loading()) XMLManager.ExportElement("CompletedSyncs", value, ConfigFile);
             }
         }
         [DataMember] public bool VerboseOutput { get; set; }
@@ -410,7 +308,7 @@ namespace OutlookGoogleCalendarSync {
             XMLManager.Export(this, XMLfile ?? ConfigFile);
         }
 
-        private Boolean loading() {
+        public Boolean Loading() {
             StackTrace stackTrace = new StackTrace();
             foreach (StackFrame frame in stackTrace.GetFrames().Reverse()) {
                 if (new String[] {"Load","isNewVersion"}.Contains(frame.GetMethod().Name)) {
@@ -423,21 +321,21 @@ namespace OutlookGoogleCalendarSync {
         public void LogSettings() {
             log.Info(ConfigFile);
             log.Info("OUTLOOK SETTINGS:-");
-            log.Info("  Service: "+ OutlookService.ToString());
-            if (OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
-                log.Info("  Shared Calendar: " + SharedCalendar);
+            log.Info("  Service: "+ Calendar.OutlookService.ToString());
+            if (Calendar.OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
+                log.Info("  Shared Calendar: " + Calendar.SharedCalendar);
             } else {
-                log.Info("  Mailbox/FolderStore Name: " + MailboxName);
+                log.Info("  Mailbox/FolderStore Name: " + Calendar.MailboxName);
             }
-            log.Info("  Calendar: "+ (UseOutlookCalendar.Name=="Calendar"?"Default ":"") + UseOutlookCalendar.Name);
-            log.Info("  Category Filter: " + CategoriesRestrictBy.ToString());
-            log.Info("  Categories: " + String.Join(",", Categories.ToArray()));
-            log.Info("  Only Responded Invites: " + OnlyRespondedInvites);
-            log.Info("  Filter String: " + OutlookDateFormat);
-            log.Info("  GAL Blocked: " + OutlookGalBlocked);
+            log.Info("  Calendar: "+ (Calendar.UseOutlookCalendar.Name=="Calendar"?"Default ":"") + Calendar.UseOutlookCalendar.Name);
+            log.Info("  Category Filter: " + Calendar.CategoriesRestrictBy.ToString());
+            log.Info("  Categories: " + String.Join(",", Calendar.Categories.ToArray()));
+            log.Info("  Only Responded Invites: " + Calendar.OnlyRespondedInvites);
+            log.Info("  Filter String: " + Calendar.OutlookDateFormat);
+            log.Info("  GAL Blocked: " + Calendar.OutlookGalBlocked);
             
             log.Info("GOOGLE SETTINGS:-");
-            log.Info("  Calendar: " + UseGoogleCalendar.Name);
+            log.Info("  Calendar: " + Calendar.UseGoogleCalendar.Name);
             log.Info("  Personal API Keys: " + UsingPersonalAPIkeys());
             log.Info("    Client Identifier: " + PersonalClientIdentifier);
             log.Info("    Client Secret: " + (PersonalClientSecret.Length < 5
@@ -446,45 +344,45 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  API attendee limit in effect: " + APIlimit_inEffect);
             log.Info("  API attendee limit last reached: " + APIlimit_lastHit);
             log.Info("  Assigned API key: " + AssignedClientIdentifier);
-            log.Info("  Cloak Email: " + CloakEmail);
+            log.Info("  Cloak Email: " + Calendar.CloakEmail);
         
             log.Info("SYNC OPTIONS:-");
             log.Info(" How");
-            log.Info("  SyncDirection: "+ SyncDirection.Name);
-            log.Info("  MergeItems: " + MergeItems);
-            log.Info("  DisableDelete: " + DisableDelete);
-            log.Info("  ConfirmOnDelete: " + ConfirmOnDelete);
-            log.Info("  SetEntriesPrivate: " + SetEntriesPrivate);
-            log.Info("  SetEntriesAvailable: " + SetEntriesAvailable);
-            log.Info("  SetEntriesColour: " + SetEntriesColour + (SetEntriesColour ? "; " + SetEntriesColourValue + "; \"" + SetEntriesColourName + "\"" : ""));
-            if ((SetEntriesPrivate || SetEntriesAvailable || SetEntriesColour) && SyncDirection == Sync.Direction.Bidirectional) {
-                log.Info("    TargetCalendar: " + TargetCalendar.Name);
-                log.Info("    CreatedItemsOnly: " + CreatedItemsOnly);
+            log.Info("  SyncDirection: "+ Calendar.SyncDirection.Name);
+            log.Info("  MergeItems: " + Calendar.MergeItems);
+            log.Info("  DisableDelete: " + Calendar.DisableDelete);
+            log.Info("  ConfirmOnDelete: " + Calendar.ConfirmOnDelete);
+            log.Info("  SetEntriesPrivate: " + Calendar.SetEntriesPrivate);
+            log.Info("  SetEntriesAvailable: " + Calendar.SetEntriesAvailable);
+            log.Info("  SetEntriesColour: " + Calendar.SetEntriesColour + (Calendar.SetEntriesColour ? "; " + Calendar.SetEntriesColourValue + "; \"" + Calendar.SetEntriesColourName + "\"" : ""));
+            if ((Calendar.SetEntriesPrivate || Calendar.SetEntriesAvailable || Calendar.SetEntriesColour) && Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+                log.Info("    TargetCalendar: " + Calendar.TargetCalendar.Name);
+                log.Info("    CreatedItemsOnly: " + Calendar.CreatedItemsOnly);
             }
-            log.Info("  Obfuscate Words: " + Obfuscation.Enabled);
-            if (Obfuscation.Enabled) {
-                if (Settings.Instance.Obfuscation.FindReplace.Count == 0) log.Info("    No regex defined.");
+            log.Info("  Obfuscate Words: " + Calendar.Obfuscation.Enabled);
+            if (Calendar.Obfuscation.Enabled) {
+                if (Settings.Instance.Calendar.Obfuscation.FindReplace.Count == 0) log.Info("    No regex defined.");
                 else {
-                    foreach (FindReplace findReplace in Settings.Instance.Obfuscation.FindReplace) {
+                    foreach (FindReplace findReplace in Settings.Instance.Calendar.Obfuscation.FindReplace) {
                         log.Info("    '" + findReplace.find + "' -> '" + findReplace.replace + "'");
                     }
                 }
             }
             log.Info(" When");
             log.Info("  DaysInThePast: "+ Calendar.DaysInThePast);
-            log.Info("  DaysInTheFuture:" + DaysInTheFuture);
-            log.Info("  SyncInterval: " + SyncInterval);
-            log.Info("  SyncIntervalUnit: " + SyncIntervalUnit);
-            log.Info("  Push Changes: " + OutlookPush);
+            log.Info("  DaysInTheFuture:" + Calendar.DaysInTheFuture);
+            log.Info("  SyncInterval: " + Calendar.SyncInterval);
+            log.Info("  SyncIntervalUnit: " + Calendar.SyncIntervalUnit);
+            log.Info("  Push Changes: " + Calendar.OutlookPush);
             log.Info(" What");
-            log.Info("  AddLocation: " + AddLocation);
-            log.Info("  AddDescription: " + AddDescription + "; OnlyToGoogle: " + AddDescription_OnlyToGoogle);
-            log.Info("  AddAttendees: " + AddAttendees);
-            log.Info("  AddColours: " + AddColours);
-            log.Info("  AddReminders: " + AddReminders);
-            log.Info("    UseGoogleDefaultReminder: " + UseGoogleDefaultReminder);
-            log.Info("    UseOutlookDefaultReminder: " + UseOutlookDefaultReminder);
-            log.Info("    ReminderDND: " + ReminderDND + " (" + ReminderDNDstart.ToString("HH:mm") + "-" + ReminderDNDend.ToString("HH:mm") + ")");
+            log.Info("  AddLocation: " + Calendar.AddLocation);
+            log.Info("  AddDescription: " + Calendar.AddDescription + "; OnlyToGoogle: " + Calendar.AddDescription_OnlyToGoogle);
+            log.Info("  AddAttendees: " + Calendar.AddAttendees);
+            log.Info("  AddColours: " + Calendar.AddColours);
+            log.Info("  AddReminders: " + Calendar.AddReminders);
+            log.Info("    UseGoogleDefaultReminder: " + Calendar.UseGoogleDefaultReminder);
+            log.Info("    UseOutlookDefaultReminder: " + Calendar.UseOutlookDefaultReminder);
+            log.Info("    ReminderDND: " + Calendar.ReminderDND + " (" + Calendar.ReminderDNDstart.ToString("HH:mm") + "-" + Calendar.ReminderDNDend.ToString("HH:mm") + ")");
             
             log.Info("PROXY:-");
             log.Info("  Type: " + Proxy.Type);

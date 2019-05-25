@@ -146,33 +146,44 @@ namespace OutlookGoogleCalendarSync {
                 sortedChildren.ForEach(c => source.Add(c));
             }
         }
-
+        
         public static XElement GetElement(String needleElement, XDocument xmlDoc) {
             return xmlDoc.Element(ns + needleElement);
         }
-        public static XElement GetElement(String needleElement, XElement element) {
+        private static XElement getElement(String needleElement, XElement element) {
             return element.Element(ns + needleElement);
         }
 
-        public static XElement AddElement(String nodeName, XElement parent, String value = null) {
+        public static XElement AddElement(String nodeName, XElement parent, String value = null, Boolean onlySingleInstance = true) {
             log.Debug("Adding element '" + nodeName + "' under '" + parent.Name.LocalName + "'");
+            XElement alreadyExists = getElement(nodeName, parent);
+            if (alreadyExists != null ) {
+                if (onlySingleInstance) {
+                    log.Warn("'" + nodeName + "' already exists. Not adding another.");
+                    return alreadyExists;
+                }
+                log.Debug("'" + nodeName + "' already exists. Adding another.");
+            }
             parent.Add(new XElement(ns + nodeName, value));
-            return GetElement(nodeName, parent);
+            return getElement(nodeName, parent);
         }
 
-        public static void RemoveElement(String nodeName, XElement parent) {
+        private static void removeElement(String nodeName, XElement parent) {
             log.Debug("Removing element '" + nodeName + "' under '" + parent.Name.LocalName + "'");
-            XElement target = GetElement(nodeName, parent);
-            target.Remove();
+            XElement target = getElement(nodeName, parent);
+            if (target == null)
+                log.Warn("Could not find element '" + nodeName + "' under '" + parent.Name.LocalName + "'");
+            else
+                target.Remove();
         }
 
         public static void MoveElement(String nodeName, XElement parent, XElement target) {
             try {
-                String value = GetElement(nodeName, parent).Value;
-                XElement movedElement = AddElement(nodeName, target, value);
-                RemoveElement(nodeName, parent);
+                XElement sourceElement = getElement(nodeName, parent);
+                target.Add(sourceElement);
+                removeElement(nodeName, parent);
             } catch (System.Exception ex) {
-                OGCSexception.Analyse(ex);
+                OGCSexception.Analyse("Could not move '" + nodeName + "'", ex);
             }
         }
 
