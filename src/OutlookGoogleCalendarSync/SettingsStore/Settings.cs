@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace OutlookGoogleCalendarSync {
     /// <summary>
@@ -81,7 +82,8 @@ namespace OutlookGoogleCalendarSync {
             apiLimit_lastHit = DateTime.Parse("01-Jan-2000");
             GaccountEmail = "";
 
-            Calendar = new SettingsStore.Calendar();
+            List<SettingsStore.Calendar>Calendars = new List<SettingsStore.Calendar>();
+            Calendars.Add(new SettingsStore.Calendar());
 
             MuteClickSounds = false;
             ShowBubbleTooltipWhenSyncing = true;
@@ -222,7 +224,7 @@ namespace OutlookGoogleCalendarSync {
         }
         //Proxy
         [DataMember] public SettingsStore.Proxy Proxy { get; set; }
-        [DataMember] public SettingsStore.Calendar Calendar { get; set; }
+        [DataMember] public List<SettingsStore.Calendar> Calendars { get; set; }
         #endregion
         #region About
         [DataMember] public string Version {
@@ -277,14 +279,21 @@ namespace OutlookGoogleCalendarSync {
             get { return isLoaded; }
         }
 
+        /// <summary>
+        /// The calendar settings profile currently displayed in the GUI.
+        /// </summary>
+        public SettingsStore.Calendar ActiveCalendarProfile;
+        /// <summary>
+        /// All profiles as defined in the settings configuration file.
+        /// </summary>
         public static void Load(String XMLfile = null) {
             try {
                 Settings.Instance = XMLManager.Import<Settings>(XMLfile ?? ConfigFile);
                 log.Fine("User settings loaded.");
                 Settings.isLoaded = true;
             } catch (ApplicationException ex) {
-                log.Error(ex.Message);
-                ResetFile(XMLfile);
+                log.Error("Failed to load settings file '" + (XMLfile ?? ConfigFile) + "'. " + ex.Message);
+                ResetFile(XMLfile ?? ConfigFile);
                 try {
                     Settings.Instance = XMLManager.Import<Settings>(XMLfile ?? ConfigFile);
                     log.Debug("User settings loaded successfully this time.");
@@ -321,21 +330,21 @@ namespace OutlookGoogleCalendarSync {
         public void LogSettings() {
             log.Info(ConfigFile);
             log.Info("OUTLOOK SETTINGS:-");
-            log.Info("  Service: "+ Calendar.OutlookService.ToString());
-            if (Calendar.OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
-                log.Info("  Shared Calendar: " + Calendar.SharedCalendar);
+            log.Info("  Service: "+ Calendars[0].OutlookService.ToString());
+            if (Calendars[0].OutlookService == OutlookOgcs.Calendar.Service.SharedCalendar) {
+                log.Info("  Shared Calendar: " + Calendars[0].SharedCalendar);
             } else {
-                log.Info("  Mailbox/FolderStore Name: " + Calendar.MailboxName);
+                log.Info("  Mailbox/FolderStore Name: " + Calendars[0].MailboxName);
             }
-            log.Info("  Calendar: "+ (Calendar.UseOutlookCalendar.Name=="Calendar"?"Default ":"") + Calendar.UseOutlookCalendar.Name);
-            log.Info("  Category Filter: " + Calendar.CategoriesRestrictBy.ToString());
-            log.Info("  Categories: " + String.Join(",", Calendar.Categories.ToArray()));
-            log.Info("  Only Responded Invites: " + Calendar.OnlyRespondedInvites);
-            log.Info("  Filter String: " + Calendar.OutlookDateFormat);
-            log.Info("  GAL Blocked: " + Calendar.OutlookGalBlocked);
+            log.Info("  Calendar: "+ (Calendars[0].UseOutlookCalendar.Name=="Calendar"?"Default ":"") + Calendars[0].UseOutlookCalendar.Name);
+            log.Info("  Category Filter: " + Calendars[0].CategoriesRestrictBy.ToString());
+            log.Info("  Categories: " + String.Join(",", Calendars[0].Categories.ToArray()));
+            log.Info("  Only Responded Invites: " + Calendars[0].OnlyRespondedInvites);
+            log.Info("  Filter String: " + Calendars[0].OutlookDateFormat);
+            log.Info("  GAL Blocked: " + Calendars[0].OutlookGalBlocked);
             
             log.Info("GOOGLE SETTINGS:-");
-            log.Info("  Calendar: " + Calendar.UseGoogleCalendar.Name);
+            log.Info("  Calendar: " + Calendars[0].UseGoogleCalendar.Name);
             log.Info("  Personal API Keys: " + UsingPersonalAPIkeys());
             log.Info("    Client Identifier: " + PersonalClientIdentifier);
             log.Info("    Client Secret: " + (PersonalClientSecret.Length < 5
@@ -344,45 +353,45 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  API attendee limit in effect: " + APIlimit_inEffect);
             log.Info("  API attendee limit last reached: " + APIlimit_lastHit);
             log.Info("  Assigned API key: " + AssignedClientIdentifier);
-            log.Info("  Cloak Email: " + Calendar.CloakEmail);
+            log.Info("  Cloak Email: " + Calendars[0].CloakEmail);
         
             log.Info("SYNC OPTIONS:-");
             log.Info(" How");
-            log.Info("  SyncDirection: "+ Calendar.SyncDirection.Name);
-            log.Info("  MergeItems: " + Calendar.MergeItems);
-            log.Info("  DisableDelete: " + Calendar.DisableDelete);
-            log.Info("  ConfirmOnDelete: " + Calendar.ConfirmOnDelete);
-            log.Info("  SetEntriesPrivate: " + Calendar.SetEntriesPrivate);
-            log.Info("  SetEntriesAvailable: " + Calendar.SetEntriesAvailable);
-            log.Info("  SetEntriesColour: " + Calendar.SetEntriesColour + (Calendar.SetEntriesColour ? "; " + Calendar.SetEntriesColourValue + "; \"" + Calendar.SetEntriesColourName + "\"" : ""));
-            if ((Calendar.SetEntriesPrivate || Calendar.SetEntriesAvailable || Calendar.SetEntriesColour) && Calendar.SyncDirection == Sync.Direction.Bidirectional) {
-                log.Info("    TargetCalendar: " + Calendar.TargetCalendar.Name);
-                log.Info("    CreatedItemsOnly: " + Calendar.CreatedItemsOnly);
+            log.Info("  SyncDirection: "+ Calendars[0].SyncDirection.Name);
+            log.Info("  MergeItems: " + Calendars[0].MergeItems);
+            log.Info("  DisableDelete: " + Calendars[0].DisableDelete);
+            log.Info("  ConfirmOnDelete: " + Calendars[0].ConfirmOnDelete);
+            log.Info("  SetEntriesPrivate: " + Calendars[0].SetEntriesPrivate);
+            log.Info("  SetEntriesAvailable: " + Calendars[0].SetEntriesAvailable);
+            log.Info("  SetEntriesColour: " + Calendars[0].SetEntriesColour + (Calendars[0].SetEntriesColour ? "; " + Calendars[0].SetEntriesColourValue + "; \"" + Calendars[0].SetEntriesColourName + "\"" : ""));
+            if ((Calendars[0].SetEntriesPrivate || Calendars[0].SetEntriesAvailable || Calendars[0].SetEntriesColour) && Calendars[0].SyncDirection == Sync.Direction.Bidirectional) {
+                log.Info("    TargetCalendar: " + Calendars[0].TargetCalendar.Name);
+                log.Info("    CreatedItemsOnly: " + Calendars[0].CreatedItemsOnly);
             }
-            log.Info("  Obfuscate Words: " + Calendar.Obfuscation.Enabled);
-            if (Calendar.Obfuscation.Enabled) {
-                if (Settings.Instance.Calendar.Obfuscation.FindReplace.Count == 0) log.Info("    No regex defined.");
+            log.Info("  Obfuscate Words: " + Calendars[0].Obfuscation.Enabled);
+            if (Calendars[0].Obfuscation.Enabled) {
+                if (Settings.Instance.ActiveCalendarProfile.Obfuscation.FindReplace.Count == 0) log.Info("    No regex defined.");
                 else {
-                    foreach (FindReplace findReplace in Settings.Instance.Calendar.Obfuscation.FindReplace) {
+                    foreach (FindReplace findReplace in Settings.Instance.ActiveCalendarProfile.Obfuscation.FindReplace) {
                         log.Info("    '" + findReplace.find + "' -> '" + findReplace.replace + "'");
                     }
                 }
             }
             log.Info(" When");
-            log.Info("  DaysInThePast: "+ Calendar.DaysInThePast);
-            log.Info("  DaysInTheFuture:" + Calendar.DaysInTheFuture);
-            log.Info("  SyncInterval: " + Calendar.SyncInterval);
-            log.Info("  SyncIntervalUnit: " + Calendar.SyncIntervalUnit);
-            log.Info("  Push Changes: " + Calendar.OutlookPush);
+            log.Info("  DaysInThePast: "+ Calendars[0].DaysInThePast);
+            log.Info("  DaysInTheFuture:" + Calendars[0].DaysInTheFuture);
+            log.Info("  SyncInterval: " + Calendars[0].SyncInterval);
+            log.Info("  SyncIntervalUnit: " + Calendars[0].SyncIntervalUnit);
+            log.Info("  Push Changes: " + Calendars[0].OutlookPush);
             log.Info(" What");
-            log.Info("  AddLocation: " + Calendar.AddLocation);
-            log.Info("  AddDescription: " + Calendar.AddDescription + "; OnlyToGoogle: " + Calendar.AddDescription_OnlyToGoogle);
-            log.Info("  AddAttendees: " + Calendar.AddAttendees);
-            log.Info("  AddColours: " + Calendar.AddColours);
-            log.Info("  AddReminders: " + Calendar.AddReminders);
-            log.Info("    UseGoogleDefaultReminder: " + Calendar.UseGoogleDefaultReminder);
-            log.Info("    UseOutlookDefaultReminder: " + Calendar.UseOutlookDefaultReminder);
-            log.Info("    ReminderDND: " + Calendar.ReminderDND + " (" + Calendar.ReminderDNDstart.ToString("HH:mm") + "-" + Calendar.ReminderDNDend.ToString("HH:mm") + ")");
+            log.Info("  AddLocation: " + Calendars[0].AddLocation);
+            log.Info("  AddDescription: " + Calendars[0].AddDescription + "; OnlyToGoogle: " + Calendars[0].AddDescription_OnlyToGoogle);
+            log.Info("  AddAttendees: " + Calendars[0].AddAttendees);
+            log.Info("  AddColours: " + Calendars[0].AddColours);
+            log.Info("  AddReminders: " + Calendars[0].AddReminders);
+            log.Info("    UseGoogleDefaultReminder: " + Calendars[0].UseGoogleDefaultReminder);
+            log.Info("    UseOutlookDefaultReminder: " + Calendars[0].UseOutlookDefaultReminder);
+            log.Info("    ReminderDND: " + Calendars[0].ReminderDND + " (" + Calendars[0].ReminderDNDstart.ToString("HH:mm") + "-" + Calendars[0].ReminderDNDend.ToString("HH:mm") + ")");
             
             log.Info("PROXY:-");
             log.Info("  Type: " + Proxy.Type);

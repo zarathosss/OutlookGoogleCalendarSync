@@ -1,13 +1,12 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
 namespace OutlookGoogleCalendarSync.SettingsStore {
     [DataContract(Namespace = "http://schemas.datacontract.org/2004/07/OutlookGoogleCalendarSync")]
     public class Calendar {
+        private static readonly ILog log = LogManager.GetLogger(typeof(Calendar));
 
         public Calendar() {
             setDefaults();
@@ -20,13 +19,15 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         }
 
         private void setDefaults() {
+            _ProfileName = "Default";
+
             //Outlook
             OutlookService = OutlookOgcs.Calendar.Service.DefaultMailbox;
             MailboxName = "";
             SharedCalendar = "";
             UseOutlookCalendar = new OutlookCalendarListEntry();
             CategoriesRestrictBy = RestrictBy.Exclude;
-            Categories = new System.Collections.Generic.List<String>();
+            Categories = new List<String>();
             OnlyRespondedInvites = false;
             OutlookDateFormat = "g";
             outlookGalBlocked = false;
@@ -68,6 +69,8 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
             ExtirpateOgcsMetadata = false;
         }
 
+        [DataMember] public string _ProfileName { get; set; }
+
         #region Outlook
         public enum RestrictBy {
             Include, Exclude
@@ -77,7 +80,7 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         [DataMember] public string SharedCalendar { get; set; }
         [DataMember] public OutlookCalendarListEntry UseOutlookCalendar { get; set; }
         [DataMember] public RestrictBy CategoriesRestrictBy { get; set; }
-        [DataMember] public System.Collections.Generic.List<string> Categories { get; set; }
+        [DataMember] public List<string> Categories { get; set; }
         [DataMember] public Boolean OnlyRespondedInvites { get; set; }
         [DataMember] public string OutlookDateFormat { get; set; }
         private Boolean outlookGalBlocked;
@@ -132,5 +135,14 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         #region Advanced - Non GUI
         [DataMember] public Boolean ExtirpateOgcsMetadata { get; private set; }
         #endregion
+
+        public void SetActive() {
+            if (Settings.Instance.ActiveCalendarProfile != null &&
+                Settings.Instance.ActiveCalendarProfile == this) return;
+
+            log.Debug("Changing active settings profile '" + this._ProfileName + "'.");
+            Settings.Instance.ActiveCalendarProfile = this;
+            Forms.Main.Instance.UpdateGUIsettings_Profile();
+        }
     }
 }

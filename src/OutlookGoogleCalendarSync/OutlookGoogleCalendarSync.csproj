@@ -203,6 +203,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>lib\Microsoft.Office.Interop.Outlook.DLL</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>lib\Squirrel\Mono.Cecil.dll</HintPath>
       <Private>True</Private>
@@ -263,6 +264,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Extensions\DateTime.cs" />
+    <Compile Include="Extensions\MenuButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Forms\ErrorReporting.cs">
       <SubType>Form</SubType>
     </Compile>

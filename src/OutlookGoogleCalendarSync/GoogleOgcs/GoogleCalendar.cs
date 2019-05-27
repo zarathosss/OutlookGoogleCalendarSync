@@ -130,7 +130,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             try {
                 log.Debug("Retrieving all recurring event instances from Google.");
                 do {
-                    EventsResource.InstancesRequest ir = Service.Events.Instances(Settings.Instance.Calendar.UseGoogleCalendar.Id, recurringEventId);
+                    EventsResource.InstancesRequest ir = Service.Events.Instances(Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id, recurringEventId);
                     ir.ShowDeleted = true;
                     ir.PageToken = pageToken;
                     int backoff = 0;
@@ -180,7 +180,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
 
             try {
                 log.Debug("Retrieving specific Event with ID " + eventId);
-                EventsResource.GetRequest gr = Service.Events.Get(Settings.Instance.Calendar.UseGoogleCalendar.Id, eventId);
+                EventsResource.GetRequest gr = Service.Events.Get(Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id, eventId);
                 int backoff = 0;
                 while (backoff < backoffLimit) {
                     try {
@@ -223,7 +223,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         }
 
         public List<Event> GetCalendarEntriesInRange() {
-            return GetCalendarEntriesInRange(Settings.Instance.Calendar.SyncStart, Settings.Instance.Calendar.SyncEnd);
+            return GetCalendarEntriesInRange(Settings.Instance.ActiveCalendarProfile.SyncStart, Settings.Instance.ActiveCalendarProfile.SyncEnd);
         }
 
         public List<Event> GetCalendarEntriesInRange(DateTime from, DateTime to) {
@@ -234,7 +234,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
 
             log.Debug("Retrieving all events from Google: " + from.ToShortDateString() + " -> " + to.ToShortDateString());
             do {
-                EventsResource.ListRequest lr = Service.Events.List(Settings.Instance.Calendar.UseGoogleCalendar.Id);
+                EventsResource.ListRequest lr = Service.Events.List(Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id);
 
                 lr.TimeMin = from;
                 lr.TimeMax = to;
@@ -350,7 +350,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             ev = OutlookOgcs.Calendar.Instance.IOutlook.IANAtimezone_set(ev, ai);
 
             ev.Summary = Obfuscate.ApplyRegex(ai.Subject, Sync.Direction.OutlookToGoogle);
-            if (Settings.Instance.Calendar.AddDescription) {
+            if (Settings.Instance.ActiveCalendarProfile.AddDescription) {
                 try {
                     ev.Description = ai.Body;
                 } catch (System.Exception ex) {
@@ -360,14 +360,14 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     } else throw ex;
                 }
             }
-            if (Settings.Instance.Calendar.AddLocation)
+            if (Settings.Instance.ActiveCalendarProfile.AddLocation)
                 ev.Location = ai.Location;
             ev.Visibility = getPrivacy(ai.Sensitivity, null);
             ev.Transparency = getAvailability(ai.BusyStatus, null);
             ev.ColorId = getColour(ai.Categories, null).Id;
 
             ev.Attendees = new List<Google.Apis.Calendar.v3.Data.EventAttendee>();
-            if (Settings.Instance.Calendar.AddAttendees && ai.Recipients.Count > 1 && !APIlimitReached_attendee) { //Don't add attendees if there's only 1 (me)
+            if (Settings.Instance.ActiveCalendarProfile.AddAttendees && ai.Recipients.Count > 1 && !APIlimitReached_attendee) { //Don't add attendees if there's only 1 (me)
                 if (ai.Recipients.Count >= 200) {
                     Forms.Main.Instance.Console.Update("Attendees will not be synced for this meeting as it has " +
                         "more than 200, which Google does not allow.", Console.Markup.warning);
@@ -381,7 +381,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
 
             //Reminder alert
             ev.Reminders = new Event.RemindersData();
-            if (Settings.Instance.Calendar.AddReminders) {
+            if (Settings.Instance.ActiveCalendarProfile.AddReminders) {
                 if (OutlookOgcs.Calendar.Instance.IsOKtoSyncReminder(ai)) {
                     if (ai.ReminderSet) {
                         ev.Reminders.UseDefault = false;
@@ -391,13 +391,13 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         ev.Reminders.Overrides = new List<EventReminder>();
                         ev.Reminders.Overrides.Add(reminder);
                     } else {
-                        ev.Reminders.UseDefault = Settings.Instance.Calendar.UseGoogleDefaultReminder;
+                        ev.Reminders.UseDefault = Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder;
                     }
                 } else {
                     ev.Reminders.UseDefault = false;
                 }
             } else
-                ev.Reminders.UseDefault = Settings.Instance.Calendar.UseGoogleDefaultReminder;
+                ev.Reminders.UseDefault = Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder;
 
             //Add the Outlook appointment ID into Google event
             CustomProperty.AddOutlookIDs(ref ev, ai);
@@ -406,7 +406,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         }
 
         private Event createCalendarEntry_save(Event ev, AppointmentItem ai) {
-            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional) {
                 log.Debug("Saving timestamp when OGCS updated event.");
                 CustomProperty.SetOGCSlastModified(ref ev);
             }
@@ -418,8 +418,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             int backoff = 0;
             while (backoff < backoffLimit) {
                 try {
-                    createdEvent = Service.Events.Insert(ev, Settings.Instance.Calendar.UseGoogleCalendar.Id).Execute();
-                    if (Settings.Instance.Calendar.AddAttendees && Settings.Instance.APIlimit_inEffect) {
+                    createdEvent = Service.Events.Insert(ev, Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id).Execute();
+                    if (Settings.Instance.ActiveCalendarProfile.AddAttendees && Settings.Instance.APIlimit_inEffect) {
                         log.Info("API limit for attendee sync lifted :-)");
                         Settings.Instance.APIlimit_inEffect = false;
                     }
@@ -446,7 +446,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 }
             }
 
-            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional || OutlookOgcs.CustomProperty.ExistsAny(ai)) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional || OutlookOgcs.CustomProperty.ExistsAny(ai)) {
                 log.Debug("Storing the Google event IDs in Outlook appointment.");
                 OutlookOgcs.CustomProperty.AddGoogleIDs(ref ai, createdEvent);
                 ai.Save();
@@ -537,7 +537,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 log.Fine("Back processing Event affected by attendee API limit.");
             } else {
                 if (!(Sync.Engine.Instance.ManualForceCompare || forceCompare)) { //Needed if the exception has just been created, but now needs updating
-                    if (Settings.Instance.Calendar.SyncDirection != Sync.Direction.Bidirectional) {
+                    if (Settings.Instance.ActiveCalendarProfile.SyncDirection != Sync.Direction.Bidirectional) {
                         if (ev.Updated > ai.LastModificationTime)
                             return null;
                     } else {
@@ -630,7 +630,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             if (Sync.Engine.CompareAttribute("Subject", Sync.Direction.OutlookToGoogle, ev.Summary, subjectObfuscated, sb, ref itemModified)) {
                 ev.Summary = subjectObfuscated;
             }
-            if (Settings.Instance.Calendar.AddDescription) {
+            if (Settings.Instance.ActiveCalendarProfile.AddDescription) {
                 String outlookBody = ai.Body;
                 //Check for Google description truncated @ 8Kb
                 if (!string.IsNullOrEmpty(outlookBody) && !string.IsNullOrEmpty(ev.Description)
@@ -643,7 +643,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     ev.Description = outlookBody;
             }
 
-            if (Settings.Instance.Calendar.AddLocation && Sync.Engine.CompareAttribute("Location", Sync.Direction.OutlookToGoogle, ev.Location, ai.Location, sb, ref itemModified))
+            if (Settings.Instance.ActiveCalendarProfile.AddLocation && Sync.Engine.CompareAttribute("Location", Sync.Direction.OutlookToGoogle, ev.Location, ai.Location, sb, ref itemModified))
                 ev.Location = ai.Location;
 
             String gPrivacy = (ev.Visibility == null || ev.Visibility == "public") ? "default" : ev.Visibility;
@@ -664,7 +664,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 ev.ColorId = oColour.Id;
             }
 
-            if (Settings.Instance.Calendar.AddAttendees && ai.Recipients.Count > 1 && !APIlimitReached_attendee) {
+            if (Settings.Instance.ActiveCalendarProfile.AddAttendees && ai.Recipients.Count > 1 && !APIlimitReached_attendee) {
                 if (ai.Recipients.Count >= 200) {
                     Forms.Main.Instance.Console.Update(OutlookOgcs.Calendar.GetEventSummary(ai) + "<br/>Attendees will not be synced for this meeting as it has " +
                         "more than 200, which Google does not allow.", Console.Markup.warning);
@@ -685,7 +685,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
 
             //Reminders
-            if (Settings.Instance.Calendar.AddReminders) {
+            if (Settings.Instance.ActiveCalendarProfile.AddReminders) {
                 Boolean OKtoSyncReminder = OutlookOgcs.Calendar.Instance.IsOKtoSyncReminder(ai);
                 if (ev.Reminders.Overrides != null && ev.Reminders.Overrides.Any(r => r.Method == "popup")) {
                     //Find the popup reminder(s) in Google
@@ -722,7 +722,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         ev.Reminders.Overrides.Add(newReminder);
                         itemModified++;
                     } else {
-                        Boolean newVal = OKtoSyncReminder ? Settings.Instance.Calendar.UseGoogleDefaultReminder : false;
+                        Boolean newVal = OKtoSyncReminder ? Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder : false;
 
                         //Google bug?! For all-day events, default notifications are added as overrides and UseDefault=false
                         //Which means it keeps adding the default back in!! Let's stop that:
@@ -737,8 +737,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     }
                 }
             } else {
-                if (Sync.Engine.CompareAttribute("Reminder Default", Sync.Direction.OutlookToGoogle, ev.Reminders.UseDefault.ToString(), Settings.Instance.Calendar.UseGoogleDefaultReminder.ToString(), sb, ref itemModified))
-                    ev.Reminders.UseDefault = Settings.Instance.Calendar.UseGoogleDefaultReminder;
+                if (Sync.Engine.CompareAttribute("Reminder Default", Sync.Direction.OutlookToGoogle, ev.Reminders.UseDefault.ToString(), Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder.ToString(), sb, ref itemModified))
+                    ev.Reminders.UseDefault = Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder;
             }
 
             if (itemModified > 0) {
@@ -750,7 +750,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         }
 
         public void UpdateCalendarEntry_save(ref Event ev) {
-            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional) {
                 log.Debug("Saving timestamp when OGCS updated event.");
                 CustomProperty.SetOGCSlastModified(ref ev);
             }
@@ -764,8 +764,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             int backoff = 0;
             while (backoff < backoffLimit) {
                 try {
-                    ev = Service.Events.Update(ev, Settings.Instance.Calendar.UseGoogleCalendar.Id, ev.Id).Execute();
-                    if (Settings.Instance.Calendar.AddAttendees && Settings.Instance.APIlimit_inEffect) {
+                    ev = Service.Events.Update(ev, Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id, ev.Id).Execute();
+                    if (Settings.Instance.ActiveCalendarProfile.AddAttendees && Settings.Instance.APIlimit_inEffect) {
                         log.Info("API limit for attendee sync lifted :-)");
                         Settings.Instance.APIlimit_inEffect = false;
                     }
@@ -831,7 +831,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             String eventSummary = GetEventSummary(ev);
             Boolean doDelete = true;
 
-            if (Settings.Instance.Calendar.ConfirmOnDelete) {
+            if (Settings.Instance.ActiveCalendarProfile.ConfirmOnDelete) {
                 if (MessageBox.Show("Delete " + eventSummary + "?", "Deletion Confirmation",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) {
                     doDelete = false;
@@ -849,7 +849,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             int backoff = 0;
             while (backoff < backoffLimit) {
                 try {
-                    string request = Service.Events.Delete(Settings.Instance.Calendar.UseGoogleCalendar.Id, ev.Id).Execute();
+                    string request = Service.Events.Delete(Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id, ev.Id).Execute();
                     break;
                 } catch (Google.GoogleApiException ex) {
                     switch (handleAPIlimits(ex, ev)) {
@@ -920,13 +920,13 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
             log.Debug(unclaimedEvents.Count + " unclaimed.");
             if (!neverDelete && unclaimedEvents.Count > 0 &&
-                (Settings.Instance.Calendar.SyncDirection == Sync.Direction.OutlookToGoogle ||
-                 Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional)) 
+                (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.OutlookToGoogle ||
+                 Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional)) 
             {
                 log.Info(unclaimedEvents.Count + " unclaimed orphan events found.");
-                if (Settings.Instance.Calendar.MergeItems || Settings.Instance.Calendar.DisableDelete || Settings.Instance.Calendar.ConfirmOnDelete) {
+                if (Settings.Instance.ActiveCalendarProfile.MergeItems || Settings.Instance.ActiveCalendarProfile.DisableDelete || Settings.Instance.ActiveCalendarProfile.ConfirmOnDelete) {
                     log.Info("These will be kept due to configuration settings.");
-                } else if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+                } else if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional) {
                     log.Debug("These 'orphaned' items must not be deleted - they need syncing up.");
                 } else {
                     if (MessageBox.Show(unclaimedEvents.Count + " Google calendar events can't be matched to Outlook.\r\n" +
@@ -1017,23 +1017,23 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                             }
                         }
                     }
-                    if (!foundMatch && Settings.Instance.Calendar.MergeItems &&
+                    if (!foundMatch && Settings.Instance.ActiveCalendarProfile.MergeItems &&
                         GoogleOgcs.CustomProperty.Get(google[g], CustomProperty.MetadataId.oCalendarId) != OutlookOgcs.Calendar.Instance.UseOutlookCalendar.EntryID)
                         google.Remove(google[g]);
 
-                } else if (Settings.Instance.Calendar.MergeItems) {
+                } else if (Settings.Instance.ActiveCalendarProfile.MergeItems) {
                     //Remove the non-Outlook item so it doesn't get deleted
                     google.Remove(google[g]);
                 }
             }
             if (metadataEnhanced > 0) log.Info(metadataEnhanced + " item's metadata enhanced.");
 
-            if (Settings.Instance.Calendar.DisableDelete) {
+            if (Settings.Instance.ActiveCalendarProfile.DisableDelete) {
                 if (google.Count > 0)
                     Forms.Main.Instance.Console.Update(google.Count + " Google items would have been deleted, but you have deletions disabled.", Console.Markup.warning);
                 google = new List<Event>();
             }
-            if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional) {
                 //Don't recreate any items that have been deleted in Google
                 for (int o = outlook.Count - 1; o >= 0; o--) {
                     if (OutlookOgcs.CustomProperty.Exists(outlook[o], OutlookOgcs.CustomProperty.MetadataId.gEventID))
@@ -1117,7 +1117,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         }
                     }
 
-                } else if (Settings.Instance.Calendar.SyncDirection == Sync.Direction.Bidirectional &&
+                } else if (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional &&
                     oGlobalID.StartsWith(OutlookOgcs.Calendar.GlobalIdPattern) &&
                     gCompareID.StartsWith(OutlookOgcs.Calendar.GlobalIdPattern) &&
                     gCompareID.Substring(72) != oGlobalID.Substring(72) &&
@@ -1134,7 +1134,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     return true;
                 }
             } else {
-                if (Settings.Instance.Calendar.MergeItems)
+                if (Settings.Instance.ActiveCalendarProfile.MergeItems)
                     log.Fine("Could not find global Appointment ID against Google Event.");
                 else
                     log.Warn("Could not find global Appointment ID against Google Event.");
@@ -1239,9 +1239,9 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             } catch { }
         }
         public void GetCalendarSettings() {
-            if (!Settings.Instance.Calendar.AddReminders || !Settings.Instance.Calendar.UseGoogleDefaultReminder) return;
+            if (!Settings.Instance.ActiveCalendarProfile.AddReminders || !Settings.Instance.ActiveCalendarProfile.UseGoogleDefaultReminder) return;
             try {
-                CalendarListResource.GetRequest request = Service.CalendarList.Get(Settings.Instance.Calendar.UseGoogleCalendar.Id);
+                CalendarListResource.GetRequest request = Service.CalendarList.Get(Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id);
                 CalendarListEntry cal = request.Execute();
                 if (cal.DefaultReminders.Count == 0)
                     this.MinDefaultReminder = long.MinValue;
@@ -1260,13 +1260,13 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// <param name="gVisibility">Google's current setting</param>
         /// <param name="direction">Direction of sync</param>
         private String getPrivacy(OlSensitivity oSensitivity, String gVisibility) {
-            if (!Settings.Instance.Calendar.SetEntriesPrivate)
+            if (!Settings.Instance.ActiveCalendarProfile.SetEntriesPrivate)
                 return (oSensitivity == OlSensitivity.olNormal) ? "default" : "private";
 
-            if (Settings.Instance.Calendar.SyncDirection != Sync.Direction.Bidirectional) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection != Sync.Direction.Bidirectional) {
                 return "private";
             } else {
-                if (Settings.Instance.Calendar.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Privacy enforcement is in other direction
+                if (Settings.Instance.ActiveCalendarProfile.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Privacy enforcement is in other direction
                     if (gVisibility == null)
                         return (oSensitivity == OlSensitivity.olNormal) ? "default" : "private";
                     else if (gVisibility == "private" && oSensitivity != OlSensitivity.olPrivate) {
@@ -1275,7 +1275,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     } else
                         return gVisibility;
                 } else {
-                    if (!Settings.Instance.Calendar.CreatedItemsOnly || (Settings.Instance.Calendar.CreatedItemsOnly && gVisibility == null))
+                    if (!Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly || (Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly && gVisibility == null))
                         return "private";
                     else
                         return (oSensitivity == OlSensitivity.olNormal) ? "default" : "private";
@@ -1289,13 +1289,13 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// <param name="oSsensitivity">Outlook's current setting</param>
         /// <param name="gTransparency">Google's current setting</param>
         private String getAvailability(OlBusyStatus oBusyStatus, String gTransparency) {
-            if (!Settings.Instance.Calendar.SetEntriesAvailable)
+            if (!Settings.Instance.ActiveCalendarProfile.SetEntriesAvailable)
                 return (oBusyStatus == OlBusyStatus.olFree) ? "transparent" : "opaque";
 
-            if (Settings.Instance.Calendar.SyncDirection != Sync.Direction.Bidirectional) {
+            if (Settings.Instance.ActiveCalendarProfile.SyncDirection != Sync.Direction.Bidirectional) {
                 return "transparent";
             } else {
-                if (Settings.Instance.Calendar.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Availability enforcement is in other direction
+                if (Settings.Instance.ActiveCalendarProfile.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Availability enforcement is in other direction
                     if (gTransparency == null)
                         return (oBusyStatus == OlBusyStatus.olFree) ? "transparent" : "opaque";
                     else if (gTransparency == "transparent" && oBusyStatus != OlBusyStatus.olFree) {
@@ -1304,7 +1304,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     } else
                         return gTransparency;
                 } else {
-                    if (!Settings.Instance.Calendar.CreatedItemsOnly || (Settings.Instance.Calendar.CreatedItemsOnly && gTransparency == null))
+                    if (!Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly || (Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly && gTransparency == null))
                         return "transparent";
                     else
                         return (oBusyStatus == OlBusyStatus.olFree) ? "transparent" : "opaque";
@@ -1318,20 +1318,20 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// <param name="aiCategories">The appointment item "categories" field</param>
         /// <returns>A match or a "null" Palette signifying no match</returns>
         private Palette getColour(String aiCategories, Palette gColour) {
-            if (!Settings.Instance.Calendar.AddColours && !Settings.Instance.Calendar.SetEntriesColour) return Palette.NullPalette;
+            if (!Settings.Instance.ActiveCalendarProfile.AddColours && !Settings.Instance.ActiveCalendarProfile.SetEntriesColour) return Palette.NullPalette;
 
             OlCategoryColor? categoryColour = null;
 
-            if (Settings.Instance.Calendar.SetEntriesColour) {
-                if (Settings.Instance.Calendar.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Colour forced to sync in other direction
+            if (Settings.Instance.ActiveCalendarProfile.SetEntriesColour) {
+                if (Settings.Instance.ActiveCalendarProfile.TargetCalendar == Sync.Direction.GoogleToOutlook) { //Colour forced to sync in other direction
                     if (gColour == null) //Creating item
                         getOutlookCategoryColour(aiCategories, ref categoryColour);
                     else return gColour;
 
                 } else {
-                    if (!Settings.Instance.Calendar.CreatedItemsOnly || (Settings.Instance.Calendar.CreatedItemsOnly && gColour == null)) {
-                        categoryColour = OutlookOgcs.CategoryMap.Colours.Where(c => c.Key.ToString() == Settings.Instance.Calendar.SetEntriesColourValue).FirstOrDefault().Key;
-                        if (categoryColour == null) log.Warn("Could not convert category name '" + Settings.Instance.Calendar.SetEntriesColourValue + "' into Outlook category type.");
+                    if (!Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly || (Settings.Instance.ActiveCalendarProfile.CreatedItemsOnly && gColour == null)) {
+                        categoryColour = OutlookOgcs.CategoryMap.Colours.Where(c => c.Key.ToString() == Settings.Instance.ActiveCalendarProfile.SetEntriesColourValue).FirstOrDefault().Key;
+                        if (categoryColour == null) log.Warn("Could not convert category name '" + Settings.Instance.ActiveCalendarProfile.SetEntriesColourValue + "' into Outlook category type.");
                     } else return gColour;
                 }
 
@@ -1388,8 +1388,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
 
         public static Boolean SignaturesMatch(String sigEv, String sigAi) {
             //Use simple matching on start,end,subject to pair events
-            if (Settings.Instance.Calendar.Obfuscation.Enabled) {
-                if (Settings.Instance.Calendar.Obfuscation.Direction.Id == Sync.Direction.OutlookToGoogle.Id)
+            if (Settings.Instance.ActiveCalendarProfile.Obfuscation.Enabled) {
+                if (Settings.Instance.ActiveCalendarProfile.Obfuscation.Direction.Id == Sync.Direction.OutlookToGoogle.Id)
                     sigAi = Obfuscate.ApplyRegex(sigAi, Sync.Direction.OutlookToGoogle);
                 else
                     sigEv = Obfuscate.ApplyRegex(sigEv, Sync.Direction.GoogleToOutlook);
@@ -1478,7 +1478,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
             if (!foundReminder) csv.Append(",,");
 
-            csv.Append(ev.Id + "," + Settings.Instance.Calendar.UseGoogleCalendar.Id + ",");
+            csv.Append(ev.Id + "," + Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id + ",");
             csv.Append((CustomProperty.Get(ev, CustomProperty.MetadataId.oEntryId) ?? "") + ",");
             csv.Append((CustomProperty.Get(ev, CustomProperty.MetadataId.oGlobalApptId) ?? "") + ",");
             csv.Append((CustomProperty.Get(ev, CustomProperty.MetadataId.oCalendarId) ?? "") + ",");
@@ -1544,7 +1544,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         private static apiException handleAPIlimits(Google.GoogleApiException ex, Event ev) {
             //https://developers.google.com/analytics/devguides/reporting/core/v3/coreErrors
 
-            if (Settings.Instance.Calendar.AddAttendees && ex.Message.Contains("Calendar usage limits exceeded. [403]") && ev != null) {
+            if (Settings.Instance.ActiveCalendarProfile.AddAttendees && ex.Message.Contains("Calendar usage limits exceeded. [403]") && ev != null) {
                 //"Google.Apis.Requests.RequestError\r\nCalendar usage limits exceeded. [403]\r\nErrors [\r\n\tMessage[Calendar usage limits exceeded.] Location[ - ] Reason[quotaExceeded] Domain[usageLimits]\r\n]\r\n"
                 //This happens because too many attendees have been added in a short period of time.
                 //See https://support.google.com/a/answer/2905486?hl=en-uk&hlrm=en

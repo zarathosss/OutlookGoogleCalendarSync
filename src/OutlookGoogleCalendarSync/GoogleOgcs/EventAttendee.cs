@@ -35,7 +35,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         private static String cloakEmail(String email) {
             if (string.IsNullOrWhiteSpace(email)) return email;
             String decloakedEmail = decloakEmail(email);
-            return (decloakedEmail + (Settings.Instance.Calendar.CloakEmail ? EmailCloak : ""));
+            return (decloakedEmail + (Settings.Instance.ActiveCalendarProfile.CloakEmail ? EmailCloak : ""));
         }
     }
 }
