@@ -493,8 +493,9 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                                     exchangeHasSmtp = (eu != null && eu.PrimarySmtpAddress != null);
                                     log.Debug(exchangeHasSmtp);
                                 } catch (System.Runtime.InteropServices.COMException ex) {
-                                    if (OGCSexception.GetErrorCode(ex) == "0xB7940201")
-                                        log.Fail("The item PrimarySmtpAddress could not be found.");
+                                    OGCSexception.Analyse("The Exchange user PrimarySmtpAddress could not be found.", OGCSexception.LogAsFail(ex));
+                                    if (oApp.GetNamespace("mapi").ExchangeConnectionMode == OlExchangeConnectionMode.olNoExchange)
+                                        log.Debug("This is likely expected as Outlook is in olNoExchange mode.");
                                     else
                                         throw ex;
                                 }
