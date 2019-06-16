@@ -1244,11 +1244,20 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                     if (GoogleOgcs.CustomProperty.Exists(google[g], GoogleOgcs.CustomProperty.MetadataId.oEntryId))
                         google.Remove(google[g]);
                 }
-                //Don't delete any items that aren't yet in Google or just created in Google during this sync
+                log.Debug("Don't delete any items that aren't yet in Google or just created in Google during this sync");
                 for (int o = outlook.Count - 1; o >= 0; o--) {
-                    if (!CustomProperty.Exists(outlook[o], CustomProperty.MetadataId.gEventID) ||
-                        outlook[o].LastModificationTime > Settings.Instance.LastSyncDate)
+                    log.Debug(GetEventSummary(outlook[o]));
+                    Boolean gEventIdExists = CustomProperty.Exists(outlook[o], CustomProperty.MetadataId.gEventID);
+                    DateTime ogcsLastModified = CustomProperty.GetOGCSlastModified(outlook[o]);
+                    log.Debug("gEventID exists: " + gEventIdExists);
+                    log.Debug("LastModificationTime: " + outlook[o].LastModificationTime.ToString("dd/MM/yyyy HH:mm:ss"));
+                    log.Debug("ogcsLastModified: " + ogcsLastModified.ToString("dd/MM/yyyy HH:mm:ss"));
+                    log.Debug("LastSyncDate: " + Settings.Instance.LastSyncDate.ToString("dd/MM/yyyy HH:mm:ss"));
+                    if (!gEventIdExists ||
+                        outlook[o].LastModificationTime > Settings.Instance.LastSyncDate) {
+                        log.Debug("Successfully protected from deletion.");
                         outlook.Remove(outlook[o]);
+                    }
                 }
             }
             if (Settings.Instance.CreateCSVFiles) {
