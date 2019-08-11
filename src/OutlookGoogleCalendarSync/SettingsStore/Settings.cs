@@ -63,12 +63,13 @@ namespace OutlookGoogleCalendarSync {
         private DateTime subscribed;
         private Boolean hideSplashScreen;
         private Boolean suppressSocialPopup;
+        private bool? cloudLogging;
 
         public Settings() {
             setDefaults();
         }
 
-        //Default values before loading from xml and attribute not yet serialized
+        //Default values before Loading() from xml and attribute not yet serialized
         [OnDeserializing]
         void OnDeserializing(StreamingContext context) {
             setDefaults();
@@ -99,12 +100,13 @@ namespace OutlookGoogleCalendarSync {
 
             CreateCSVFiles = false;
             LoggingLevel = "DEBUG";
+            cloudLogging = null;
             portable = false;
             Proxy = new SettingsStore.Proxy();
 
             alphaReleases = !System.Windows.Forms.Application.ProductVersion.EndsWith("0.0");
             SkipVersion = null;
-            Subscribed = DateTime.Parse("01-Jan-2000");
+            subscribed = DateTime.Parse("01-Jan-2000");
             donor = false;
             hideSplashScreen = false;
             suppressSocialPopup = false;
@@ -133,14 +135,14 @@ namespace OutlookGoogleCalendarSync {
             get { return assignedClientIdentifier; }
             set {
                 assignedClientIdentifier = value.Trim();
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AssignedClientIdentifier", value.Trim(), ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("AssignedClientIdentifier", value.Trim(), ConfigFile);
             }
         }
         [DataMember] public String AssignedClientSecret {
             get { return assignedClientSecret; }
             set {
                 assignedClientSecret = value.Trim();
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AssignedClientSecret", value.Trim(), ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("AssignedClientSecret", value.Trim(), ConfigFile);
             }
         }
         private String personalClientIdentifier;
@@ -160,14 +162,14 @@ namespace OutlookGoogleCalendarSync {
             get { return apiLimit_inEffect; }
             set {
                 apiLimit_inEffect = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("APIlimit_inEffect", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("APIlimit_inEffect", value, ConfigFile);
             }
         }
         [DataMember] public DateTime APIlimit_lastHit {
             get { return apiLimit_lastHit; }
             set {
                 apiLimit_lastHit = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("APIlimit_lastHit", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("APIlimit_lastHit", value, ConfigFile);
             }
         }
         [DataMember] public String GaccountEmail { get; set; }
@@ -180,7 +182,7 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool HideSplashScreen {
             get { return hideSplashScreen; }
             set {
-                if (!Settings.Instance.Loading() && hideSplashScreen != value) {
+                if (!Loading() && hideSplashScreen != value) {
                     XMLManager.ExportElement("HideSplashScreen", value, ConfigFile);
                     if (Forms.Main.Instance != null) Forms.Main.Instance.cbHideSplash.Checked = value;
                 }
@@ -191,7 +193,7 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool SuppressSocialPopup {
             get { return suppressSocialPopup; }
             set {
-                if (!Settings.Instance.Loading() && suppressSocialPopup != value) {
+                if (!Loading() && suppressSocialPopup != value) {
                     XMLManager.ExportElement("SuppressSocialPopup", value, ConfigFile);
                     if (Forms.Main.Instance != null) Forms.Main.Instance.cbSuppressSocialPopup.Checked = value;
                 }
@@ -209,18 +211,18 @@ namespace OutlookGoogleCalendarSync {
             get { return portable; }
             set {
                 portable = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("Portable", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("Portable", value, ConfigFile);
             }
         }
 
         [DataMember] public bool CreateCSVFiles { get; set; }
         [DataMember] public String LoggingLevel { get; set; }
-        private bool? cloudLogging;
         [DataMember] public bool? CloudLogging {
             get { return cloudLogging; }
             set {
                 cloudLogging = value;
                 GoogleOgcs.ErrorReporting.SetThreshold(value ?? false);
+                if (!Loading()) XMLManager.ExportElement("CloudLogging", value, ConfigFile);
             }
         }
         //Proxy
@@ -241,7 +243,7 @@ namespace OutlookGoogleCalendarSync {
             get { return alphaReleases; }
             set {
                 alphaReleases = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("AlphaReleases", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("AlphaReleases", value, ConfigFile);
             }
         }
         public Boolean UserIsBenefactor() {
@@ -251,14 +253,14 @@ namespace OutlookGoogleCalendarSync {
             get { return subscribed; }
             set {
                 subscribed = value;
-                if (!loading()) XMLManager.ExportElement("Subscribed", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("Subscribed", value, ConfigFile);
             }
         }
         [DataMember] public Boolean Donor {
             get { return donor; }
             set {
                 donor = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("Donor", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("Donor", value, ConfigFile);
             }
         }
         #endregion
@@ -267,14 +269,14 @@ namespace OutlookGoogleCalendarSync {
             get { return lastSyncDate; }
             set {
                 lastSyncDate = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("LastSyncDate", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("LastSyncDate", value, ConfigFile);
             }
         }
         [DataMember] public Int32 CompletedSyncs {
             get { return completedSyncs; }
             set {
                 completedSyncs = value;
-                if (!Settings.Instance.Loading()) XMLManager.ExportElement("CompletedSyncs", value, ConfigFile);
+                if (!Loading()) XMLManager.ExportElement("CompletedSyncs", value, ConfigFile);
             }
         }
         [DataMember] public bool VerboseOutput { get; set; }
@@ -351,7 +353,7 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  GAL Blocked: " + Calendars[0].OutlookGalBlocked);
             
             log.Info("GOOGLE SETTINGS:-");
-            log.Info("  Calendar: " + Calendars[0].UseGoogleCalendar.Name);
+            log.Info("  Calendar: " + (Calendars[0].UseGoogleCalendar == null ? "" : Calendars[0].UseGoogleCalendar.ToString()));
             log.Info("  Personal API Keys: " + UsingPersonalAPIkeys());
             log.Info("    Client Identifier: " + PersonalClientIdentifier);
             log.Info("    Client Secret: " + (PersonalClientSecret.Length < 5

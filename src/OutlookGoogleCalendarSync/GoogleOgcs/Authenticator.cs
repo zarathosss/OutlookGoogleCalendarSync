@@ -54,15 +54,20 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         }
 
         private void spawnOauth() {
-            ClientSecrets cs = getCalendarClientSecrets();
-            //Calling an async function from a static constructor needs to be called like this, else it deadlocks:-
-            var task = System.Threading.Tasks.Task.Run(async () => { await getAuthenticated(cs); });
             try {
-                task.Wait(CancelTokenSource.Token);
-            } catch (System.OperationCanceledException) {
-                Forms.Main.Instance.Console.Update("Authorisation to allow OGCS to manage your Google calendar was cancelled.", Console.Markup.warning);
+                ClientSecrets cs = getCalendarClientSecrets();
+                //Calling an async function from a static constructor needs to be called like this, else it deadlocks:-
+                var task = System.Threading.Tasks.Task.Run(async () => { await getAuthenticated(cs); });
+                try {
+                    task.Wait(CancelTokenSource.Token);
+                } catch (System.OperationCanceledException) {
+                    Forms.Main.Instance.Console.Update("Authorisation to allow OGCS to manage your Google calendar was cancelled.", Console.Markup.warning);
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse(ex);
+                }
             } catch (System.Exception ex) {
-                OGCSexception.Analyse(ex);
+                log.Fail("Problem encountered in getCalendarClientSecrets()");
+                Forms.Main.Instance.Console.UpdateWithError("Unable to authenticate with Google!", ex);
             }
         }
 
@@ -220,7 +225,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                             }
                         }
                     } else {
-                        throw ex;
+                        throw;
                     }
                 }
                 OGCSexception.Analyse(ex);
@@ -230,7 +235,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 } else if (ex.Message.ToLower().Contains("prohibited") && Settings.Instance.UsingPersonalAPIkeys()) {
                     Forms.Main.Instance.Console.Update("If you are using your own API keys, you must also enable the Google+ API.", Console.Markup.warning);
                 }
-                throw ex;
+                throw;
 
             } catch (System.Exception ex) {
                 log.Debug("JSON: " + jsonString);
@@ -385,8 +390,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     return false;
                 }
 
-            } catch (System.ApplicationException ex) {
-                throw ex;
+            } catch (System.ApplicationException) {
+                throw;
 
             } catch (System.Exception ex) {
                 log.Error("Failed to retrieve donors - cannot check if they have donated.");

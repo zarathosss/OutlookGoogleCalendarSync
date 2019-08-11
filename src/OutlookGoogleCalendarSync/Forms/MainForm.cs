@@ -50,11 +50,12 @@ namespace OutlookGoogleCalendarSync.Forms {
                 this.WindowState = FormWindowState.Minimized;
             }
             if (((Sync.Engine.Instance.OgcsTimer.NextSyncDate ?? DateTime.Now.AddMinutes(10)) - DateTime.Now).TotalMinutes > 5) {
-                OutlookOgcs.Calendar.Instance.Disconnect(onlyWhenNoGUI: true);
+                OutlookOgcs.Calendar.Disconnect(onlyWhenNoGUI: true);
             }
         }
 
         private void updateGUIsettings() {
+            log.Debug("Configuring main form components.");
             this.SuspendLayout();
             #region Tooltips
             //set up tooltips for some controls
@@ -245,7 +246,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 }
 
                 //Mailboxes the user has access to
-                log.Debug("Find Folders");
+            log.Debug("Find calendar folders");
                 if (OutlookOgcs.Calendar.Instance.Folders.Count == 1) {
                     rbOutlookAltMB.Enabled = false;
                     rbOutlookAltMB.Checked = false;
@@ -1107,7 +1108,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             }
             if (calendars != null) {
                 cbGoogleCalendars.Items.Clear();
-                calendars.Sort((x, y) => x.Name.CompareTo(y.Name));
+                calendars.Sort((x, y) => (x.Sorted()).CompareTo(y.Sorted()));
                 foreach (GoogleCalendarListEntry mcle in calendars) {
                     cbGoogleCalendars.Items.Add(mcle);
                     if (cbGoogleCalendars.SelectedIndex == -1 && mcle.Id == Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id)
@@ -1126,7 +1127,13 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void cbGoogleCalendars_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!this.Visible) return;
             Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar = (GoogleCalendarListEntry)cbGoogleCalendars.SelectedItem;
+            if (cbGoogleCalendars.Text.StartsWith("[Read Only]") && Settings.Instance.ActiveCalendarProfile.SyncDirection.Id != Sync.Direction.GoogleToOutlook.Id) {
+                MessageBox.Show("You cannot " + (Settings.Instance.ActiveCalendarProfile.SyncDirection == Sync.Direction.Bidirectional ? "two-way " : "") + "sync with a read-only Google calendar.\n" +
+                    "Please review your calendar selection.", "Read-only Sync", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                this.tabAppSettings.SelectedTab = this.tabAppSettings.TabPages["tabGoogle"];
+        }
         }
 
         private void btResetGCal_Click(object sender, EventArgs e) {
@@ -1134,8 +1141,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 "Useful if you want to start syncing to a different account.",
                 "Reset Google account?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes) {
                 log.Info("User requested reset of Google authentication details.");
-                Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Id = null;
-                Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar.Name = null;
+                Settings.Instance.ActiveCalendarProfile.UseGoogleCalendar = new GoogleCalendarListEntry();
                 this.cbGoogleCalendars.Items.Clear();
                 this.tbClientID.ReadOnly = false;
                 this.tbClientSecret.ReadOnly = false;
@@ -1267,6 +1273,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             }
             cbAddAttendees_CheckedChanged(null, null);
             cbAddReminders_CheckedChanged(null, null);
+            cbGoogleCalendars_SelectedIndexChanged(null, null);
             showWhatPostit("Description");
         }
 
@@ -1380,7 +1387,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         #region When
         public int MinSyncMinutes {
             get {
-                if (System.Diagnostics.Debugger.IsAttached) return 1;
+                if (Program.InDeveloperMode) return 1;
                 else {
                     if (Settings.Instance.ActiveCalendarProfile.OutlookPush && Settings.Instance.ActiveCalendarProfile.SyncDirection != Sync.Direction.GoogleToOutlook)
                         return 120;
@@ -1411,8 +1418,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 if (cbIntervalUnit.SelectedItem.ToString() == "Minutes") {
                     if ((int)tbInterval.Value < MinSyncMinutes)
                         tbInterval.Value = (tbInterval.Value < Convert.ToInt16(tbInterval.Text)) ? 0 : MinSyncMinutes;
-                    else if ((int)tbInterval.Value > 120) {
-                        tbInterval.Value = 3;
+                    else if ((int)tbInterval.Value > MinSyncMinutes) {
+                        tbInterval.Value = (MinSyncMinutes / 60) + 1;
                         cbIntervalUnit.Text = "Hours";
                     }
 
@@ -1544,7 +1551,20 @@ namespace OutlookGoogleCalendarSync.Forms {
         private void cbStartOnStartup_CheckedChanged(object sender, EventArgs e) {
             Settings.Instance.StartOnStartup = cbStartOnStartup.Checked;
             tbStartupDelay.Enabled = cbStartOnStartup.Checked;
+            try {
             Program.ManageStartupRegKey();
+            } catch (System.Exception ex) {
+                if (ex is System.Security.SecurityException) OGCSexception.LogAsFail(ref ex); //User doesn't have rights to access registry
+                OGCSexception.Analyse("Failed accessing registry for startup key.", ex);
+                if (this.Visible) {
+                    MessageBox.Show("You do not have permissions to access the system registry.\nThis setting cannot be used.",
+                        "Registry access denied", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        }
+                cbStartOnStartup.CheckedChanged -= cbStartOnStartup_CheckedChanged;
+                cbStartOnStartup.Checked = false;
+                tbStartupDelay.Enabled = false;
+                cbStartOnStartup.CheckedChanged += cbStartOnStartup_CheckedChanged;
+            }
         }
 
         private void cbHideSplash_CheckedChanged(object sender, EventArgs e) {
@@ -1610,7 +1630,7 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void cbLoggingLevel_SelectedIndexChanged(object sender, EventArgs e) {
             Settings.configureLoggingLevel(this.cbLoggingLevel.Text);
-            Settings.Instance.LoggingLevel = this.cbLoggingLevel.Text.ToUpper();
+            if (this.Visible) Settings.Instance.LoggingLevel = this.cbLoggingLevel.Text.ToUpper();
         }
 
         private void btLogLocation_Click(object sender, EventArgs e) {
@@ -1625,6 +1645,8 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void cbCloudLogging_CheckStateChanged(object sender, EventArgs e) {
+            if (!this.Visible) return;
+
             if (cbCloudLogging.CheckState == CheckState.Indeterminate)
                 Settings.Instance.CloudLogging = null;
             else
