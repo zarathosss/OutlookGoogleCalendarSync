@@ -454,20 +454,26 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         public String GetRecipientEmail(Recipient recipient) {
             String retEmail = "";
             Boolean builtFakeEmail = false;
+            String nameForFakeEmail = "";
 
-            log.Fine("Determining email of recipient: " + recipient.Name);
             AddressEntry addressEntry = null;
             String addressEntryType = "";
             try {
                 try {
+                    log.Fine("Determining email of recipient: " + recipient.Name);
+                    nameForFakeEmail = recipient.Name;
                     addressEntry = recipient.AddressEntry;
-                } catch {
-                    log.Warn("Can't resolve this recipient!");
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse("Can't resolve this recipient!", OGCSexception.LogAsFail(ex));
+                    if (string.IsNullOrEmpty(nameForFakeEmail)) {
+                        nameForFakeEmail = Environment.GetEnvironmentVariable("USERNAME");
+                        log.Debug("Using %USERNAME% environment variable '" + nameForFakeEmail + "'");
+                    }
                     addressEntry = null;
                 }
                 if (addressEntry == null) {
-                    log.Warn("No AddressEntry exists!");
-                    retEmail = EmailAddress.BuildFakeEmailAddress(recipient.Name, out builtFakeEmail);
+                    log.Warn("No AddressEntry exists/available!");
+                    retEmail = EmailAddress.BuildFakeEmailAddress(nameForFakeEmail, out builtFakeEmail);
                 } else {
                     try {
                         addressEntryType = addressEntry.Type;
