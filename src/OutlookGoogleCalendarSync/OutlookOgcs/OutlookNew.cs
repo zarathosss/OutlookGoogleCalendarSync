@@ -229,8 +229,17 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                 inspector = (Inspector)OutlookOgcs.Calendar.ReleaseObject(inspector);
                 log.Debug("Done.");
 
-                currentUserSMTP = GetRecipientEmail(currentUser);
-                currentUserName = currentUser.Name;
+                try {
+                    currentUserSMTP = GetRecipientEmail(currentUser);
+                    currentUserName = currentUser.Name;
+                } catch (System.Exception ex) {
+                    if (OGCSexception.GetErrorCode(ex) == "0x80004004") { //E_ABORT
+                        log.Warn("Corporate policy or possibly anti-virus is blocking access to GAL.");
+                    } else OGCSexception.Analyse(ex);
+                    log.Warn("OGCS is unable to interogate CurrentUser from Outlook.");
+                    Settings.Instance.OutlookGalBlocked = true;
+                    return oNS;
+                }
             } finally {
                 currentUser = (Recipient)OutlookOgcs.Calendar.ReleaseObject(currentUser);
                 if (releaseNamespace) oNS = (NameSpace)OutlookOgcs.Calendar.ReleaseObject(oNS);
