@@ -444,7 +444,7 @@ namespace OutlookGoogleCalendarSync {
                 }
                 Settings.Instance.Version = Application.ProductVersion;
                 if (Application.ProductVersion.EndsWith(".0")) { //Release notes not updated for hotfixes.
-                    System.Diagnostics.Process.Start("https://github.com/phw198/OutlookGoogleCalendarSync/blob/master/docs/Release%20Notes.md");
+                    BrowseToUrl("https://github.com/phw198/OutlookGoogleCalendarSync/blob/master/docs/Release%20Notes.md");
                     if (isSquirrelInstall) Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.upgrade, "from=" + settingsVersion + ";to=" + Application.ProductVersion);
                 }
             }
@@ -470,7 +470,7 @@ namespace OutlookGoogleCalendarSync {
                         OgcsMessageBox.Show("A suspected improper install location has been detected.\r\n" +
                             "Click 'OK' for further details.", "Improper Install Location",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        System.Diagnostics.Process.Start("https://github.com/phw198/OutlookGoogleCalendarSync/issues/265");
+                        BrowseToUrl("https://github.com/phw198/OutlookGoogleCalendarSync/issues/265");
                     }
                 }
             } catch (System.Exception ex) {
@@ -492,7 +492,7 @@ namespace OutlookGoogleCalendarSync {
         }
 
         public static void Donate() {
-            System.Diagnostics.Process.Start("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=44DUQ7UT6WE2C&item_name=Outlook Google Calendar Sync from " + Settings.Instance.GaccountEmail);
+            BrowseToUrl("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=44DUQ7UT6WE2C&item_name=Outlook Google Calendar Sync from " + Settings.Instance.GaccountEmail);
         }
 
         public static Boolean InDeveloperMode {
@@ -511,6 +511,19 @@ namespace OutlookGoogleCalendarSync {
                 return path.Replace(userProfile, userProfileMasked);
             } else
                 return path;
+        }
+
+        public static void BrowseToUrl(String url) {
+            try {
+                System.Diagnostics.Process.Start(url);
+            } catch (System.Exception ex) {
+                log.Warn("Failed to open default browser for " + ex.Message);
+                try {
+                    System.Diagnostics.Process.Start("iexplore.exe", url);
+                } catch {
+                    OGCSexception.Analyse("Could not open browser, even iexplore.exe, for " + url, ex);
+                }
+            }
         }
     }
 }

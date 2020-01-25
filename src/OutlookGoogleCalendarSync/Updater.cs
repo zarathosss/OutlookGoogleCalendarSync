@@ -64,7 +64,7 @@ namespace OutlookGoogleCalendarSync {
             } catch (ApplicationException ex) {
                 log.Error(ex.Message + " " + ex.InnerException.Message);
                 if (OgcsMessageBox.Show("The upgrade failed.\nWould you like to get the latest version from the project website manually?", "Upgrade Failed", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes) {
-                    System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/");
+                    Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/");
                 }
 
             } catch (System.Exception ex) {
@@ -163,7 +163,7 @@ namespace OutlookGoogleCalendarSync {
                                         Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.download, squirrelAnalyticsLabel + ";retry-timedout");
                                         if (OgcsMessageBox.Show("The update failed to download again.\nTo download from the project website, click Yes.", "Download timed out", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes) {
                                             Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.download, squirrelAnalyticsLabel + ";from-website");
-                                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/");
+                                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/");
                                         } else
                                             Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.download, squirrelAnalyticsLabel + ";gave-up");
                                         break;
@@ -171,7 +171,7 @@ namespace OutlookGoogleCalendarSync {
                                 } else {
                                     if (OgcsMessageBox.Show("Would you like to download directly from the project website?", "Go to OGCS website", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes) {
                                         Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.download, squirrelAnalyticsLabel + ";from-website");
-                                        System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/");
+                                        Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/");
                                     } else
                                         Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.download, squirrelAnalyticsLabel + ";gave-up");
                                     break;
@@ -305,7 +305,7 @@ namespace OutlookGoogleCalendarSync {
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
                     log.Debug("User opted to give feedback.");
                     Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.uninstall, Application.ProductVersion + "-feedback");
-                    System.Diagnostics.Process.Start("https://docs.google.com/forms/d/e/1FAIpQLSfRWYFdgyfbFJBMQ0dz14patu195KSKxdLj8lpWvLtZn-GArw/viewform?entry.1161230174=v" + Application.ProductVersion);
+                    Program.BrowseToUrl("https://docs.google.com/forms/d/e/1FAIpQLSfRWYFdgyfbFJBMQ0dz14patu195KSKxdLj8lpWvLtZn-GArw/viewform?entry.1161230174=v" + Application.ProductVersion);
                 } else {
                     log.Debug("User opted not to give feedback.");
                 }
@@ -418,7 +418,7 @@ namespace OutlookGoogleCalendarSync {
                     log.Info("New " + releaseType + " ZIP release found: " + releaseVersion);
                     DialogResult dr = OgcsMessageBox.Show("A new " + releaseType + " release is available for OGCS. Would you like to upgrade to v" + releaseVersion + "?", "New OGCS Release Available", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (dr == DialogResult.Yes) {
-                        System.Diagnostics.Process.Start(releaseURL);
+                        Program.BrowseToUrl(releaseURL);
                     }
                 } else {
                     log.Info("Already on latest ZIP release.");

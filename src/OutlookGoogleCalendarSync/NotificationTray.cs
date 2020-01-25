@@ -206,7 +206,7 @@ namespace OutlookGoogleCalendarSync {
                 notifyIcon.Tag = "";
 
             } else if (notifyIcon.Tag != null && notifyIcon.Tag.ToString() == "OOMsecurity") {
-                System.Diagnostics.Process.Start("https://github.com/phw198/OutlookGoogleCalendarSync/wiki/FAQs---Outlook-Security");
+                Program.BrowseToUrl("https://github.com/phw198/OutlookGoogleCalendarSync/wiki/FAQs---Outlook-Security");
                 notifyIcon.Tag = "";
 
             } else {

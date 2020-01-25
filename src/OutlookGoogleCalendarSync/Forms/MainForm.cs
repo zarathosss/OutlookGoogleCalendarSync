@@ -629,40 +629,40 @@ namespace OutlookGoogleCalendarSync.Forms {
                         focusedPage = Forms.Main.Instance.tabApp.SelectedTab;
 
                         if (focusedPage == null) {
-                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
+                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
                             return true;
                         }
 
                         if (focusedPage.Name == "tabPage_Sync")
-                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/sync");
+                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/sync");
 
                         else if (focusedPage.Name == "tabPage_Settings") {
                             if (this.tabAppSettings.SelectedTab.Name == "tabOutlook")
-                                System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/outlook");
+                                Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/outlook");
                             else if (this.tabAppSettings.SelectedTab.Name == "tabGoogle")
-                                System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/google");
+                                Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/google");
                             else if (this.tabAppSettings.SelectedTab.Name == "tabSyncOptions")
-                                System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/syncoptions");
+                                Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/syncoptions");
                             else if (this.tabAppSettings.SelectedTab.Name == "tabAppBehaviour")
-                                System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/appbehaviour");
+                                Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/appbehaviour");
                             else
-                                System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/settings");
+                                Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/settings");
 
                         } else if (focusedPage.Name == "tabPage_Help")
-                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/help");
+                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/help");
 
                         else if (focusedPage.Name == "tabPage_About")
-                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide/about");
+                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide/about");
 
                         else
-                            System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
+                            Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
 
                         return true; //This keystroke was handled, don't pass to the control with the focus
 
                     } catch (System.Exception ex) {
                         log.Warn("Failed to process captured F1 key.");
                         OGCSexception.Analyse(ex);
-                        System.Diagnostics.Process.Start("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
+                        Program.BrowseToUrl("https://phw198.github.io/OutlookGoogleCalendarSync/guide");
                         return true;
                     }
                 }
@@ -791,7 +791,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                         OgcsMessageBox.Show("Before renewing, please ensure you don't already have an active recurring annual payment set up in PayPal :-)", 
                             "Recurring payment already configured?", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
-                    System.Diagnostics.Process.Start(tbSyncNote.Tag.ToString());
+                    Program.BrowseToUrl(tbSyncNote.Tag.ToString());
                 }
             }
         }
@@ -1000,7 +1000,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void urlDateFormats_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            System.Diagnostics.Process.Start("https://msdn.microsoft.com/en-us/library/az4se3k1%28v=vs.90%29.aspx");
+            Program.BrowseToUrl("https://msdn.microsoft.com/en-us/library/az4se3k1%28v=vs.90%29.aspx");
         }
         #endregion
         #endregion
@@ -1110,7 +1110,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void llAPIConsole_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            System.Diagnostics.Process.Start(llAPIConsole.Text);
+            Program.BrowseToUrl(llAPIConsole.Text);
         }
 
         private void tbClientID_TextChanged(object sender, EventArgs e) {
@@ -1655,7 +1655,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void linkTShoot_issue_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            System.Diagnostics.Process.Start("https://github.com/phw198/OutlookGoogleCalendarSync/issues");
+            Program.BrowseToUrl("https://github.com/phw198/OutlookGoogleCalendarSync/issues");
         }
 
         private void linkTShoot_logfile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
@@ -1675,7 +1675,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void lAboutURL_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            System.Diagnostics.Process.Start(lAboutURL.Text);
+            Program.BrowseToUrl(lAboutURL.Text);
         }
 
         private void pbDonate_Click(object sender, EventArgs e) {
