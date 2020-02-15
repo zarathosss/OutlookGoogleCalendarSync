@@ -514,10 +514,36 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                         log.Fine("Address is from Exchange");
                         if (addressEntry.AddressEntryUserType == OlAddressEntryUserType.olExchangeUserAddressEntry ||
                             addressEntry.AddressEntryUserType == OlAddressEntryUserType.olExchangeRemoteUserAddressEntry) {
+                            log.Debug("Initialising eu variable");
                             ExchangeUser eu = null;
                             try {
+                                log.Debug("Calling GetExchangeUser()");
+                                OlExchangeConnectionMode? exchangeConnectionMode = null; // OlExchangeConnectionMode.;
+                                try {
+                                    exchangeConnectionMode = oApp.GetNamespace("mapi").ExchangeConnectionMode;
+                                    log.Debug("ExchangeConnectionMode=" + exchangeConnectionMode.ToString());
+                                } catch {
+                                    log.Fail("Couldn't get ExchangeConnectionMode");
+                                }
                                 eu = addressEntry.GetExchangeUser();
-                                if (eu != null && eu.PrimarySmtpAddress != null)
+                                Boolean exchangeHasSmtp = false;
+                                try {
+                                    log.Debug("Did GetExchangeUser() return something?");
+                                    log.Debug("eu != null:" + (eu != null));
+                                    exchangeHasSmtp = (eu != null && eu.PrimarySmtpAddress != null);
+                                    log.Debug(exchangeHasSmtp);
+                                } catch (System.Runtime.InteropServices.COMException ex) {
+                                    if (OGCSexception.GetErrorCode(ex, 0x000FFFFF) == "0x00040201" )
+                                        log.Fail("The Exchange user PrimarySmtpAddress could not be found.");
+                                    else
+                                        OGCSexception.Analyse("The Exchange user PrimarySmtpAddress could not be found.", OGCSexception.LogAsFail(ex));
+
+                                    if (exchangeConnectionMode == OlExchangeConnectionMode.olNoExchange)
+                                        log.Debug("This is likely expected as Outlook is in olNoExchange mode.");
+                                    else
+                                        throw ex; //Don't throw once we've fully identified the issue here #951
+                                }
+                                if (exchangeHasSmtp)
                                     retEmail = eu.PrimarySmtpAddress;
                                 else {
                                     log.Warn("Exchange does not have an email for recipient: " + recipient.Name);
