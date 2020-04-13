@@ -1,4 +1,6 @@
-﻿using log4net;
+﻿#define COMPILING_FOR_2010          //THE DEFAULT COMPILATION FOR RELEASES (V14 OF INTEROP)
+//#define DEVELOPING_AGAINST_2007     //Develop as for Outlook 2007 for greatest compatiblity
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -38,7 +40,13 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                 else {
                     try {
                         store = calendar.Store;
-                        this.categories = store.GetType().GetProperty("Categories").GetValue(store, null) as Outlook.Categories;
+                        if (OutlookOgcs.Factory.OutlookVersionName == Factory.OutlookVersionNames.Outlook2007)
+                            this.categories = store.GetType().GetProperty("Categories").GetValue(store, null) as Outlook.Categories;
+                        else {
+#if COMPILING_FOR_2010 || !DEVELOPING_AGAINST_2007
+                            this.categories = store.Categories;
+#endif
+                        }
                     } catch (System.Exception ex) {
                         log.Warn("Failed getting non-default mailbox categories. " + ex.Message);
                         log.Debug("Reverting to default mailbox categories.");
@@ -144,7 +152,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             return olCategory.ToString().Replace("olCategoryColor", "").Replace("Dark", "Dark ");
         }
     }
-    
+
     public class CategoryMap {
         private static readonly ILog log = LogManager.GetLogger(typeof(CategoryMap));
 
