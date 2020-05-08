@@ -52,54 +52,54 @@ namespace OutlookGoogleCalendarSync {
                 padding-right: 9px;
                 margin-left: -30px;
             }
-         	.em-repeat {
+            .em-repeat {
                 padding-right: 0px;
-				margin-left: 0px;
-			}
+              margin-left: 0px;
+            }
             .info, .error, .warning {
                 margin-top: 8px;
-				padding-bottom: 4px;
-				margin-bottom: 10px;
-				padding-left: 5px;
-				border-left-width: 10px;
-				border-left-style: solid;
-				border-bottom-left-radius: 5px;
-				border-top-left-radius: 5px;
-				margin-left: -15px;
-			}
+                padding-bottom: 4px;
+                margin-bottom: 10px;
+                padding-left: 5px;
+                border-left-width: 10px;
+                border-left-style: solid;
+                border-bottom-left-radius: 5px;
+                border-top-left-radius: 5px;
+                margin-left: -15px;
+            }
             .info {
-				background-color: lightblue;
-				border-left-color: cornflowerblue;
-			}
+                background-color: lightblue;
+                border-left-color: cornflowerblue;
+            }
             .error {
-				background-color: pink;
-				border-left-color: red;
-			}
-			.warning {
-				background-color: lightgoldenrodyellow;
-				border-left-color: yellow;
-			}
-			h2.sectionHeader {
+                background-color: pink;
+                border-left-color: red;
+            }
+            .warning {
+                background-color: lightgoldenrodyellow;
+                border-left-color: yellow;
+            }
+            h2.sectionHeader {
                 font-size: 14px;
                 margin-bottom: 3px;
             }
-			.sectionEnd {
-				padding-left: 0px;
-				border-bottom: 1px solid lightgray;
-				padding-bottom: 6px;
-				margin-bottom: 10px;
-			}
+            .sectionEnd {
+              padding-left: 0px;
+              border-bottom: 1px solid lightgray;
+              padding-bottom: 6px;
+              margin-bottom: 10px;
+            }
             .appointmentEnd {
                 margin-bottom: 10px;
                 margin-top: 5px;
                 padding-left: 0px;
             }
-			table.eventChanges {
+            table.eventChanges {
                 font-size: 14px;
                 margin-top: 5px;
                 border-spacing: 4px;
                 margin-left: 10px;
-			}
+            }
             th.eventChanges {
                 text-align: left;
                 font-weight: normal;
@@ -107,10 +107,10 @@ namespace OutlookGoogleCalendarSync {
                 margin: 10px;
                 border-bottom: gray 1px dashed;
             }
-			td.eventChanges {
-				padding-right: 10px;
-				vertical-align: top;
-			}
+            td.eventChanges {
+                padding-right: 10px;
+                vertical-align: top;
+            }
             tr:nth-child(odd) {
                 background-color: #eae9e9;
             }
@@ -145,7 +145,7 @@ namespace OutlookGoogleCalendarSync {
             if (this.wb != null) return;
             this.wb = wb;
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Program.InDeveloperMode)
                 wb.IsWebBrowserContextMenuEnabled = true;
 
             wb.Navigate("about:blank");
@@ -183,7 +183,7 @@ namespace OutlookGoogleCalendarSync {
             }
 
             navigationStatus = NavigationStatus.navigated;
-            log.Fine("Console finished navigating");
+            log.UltraFine("Console finished navigating");
         }
 
         private void awaitRefresh() {
@@ -219,12 +219,14 @@ namespace OutlookGoogleCalendarSync {
             calendar,
             checkered_flag,
             error,
+            fail,
             h2,
             info,
             mag_right,
             warning,
             appointmentEnd, //margin top and bottom
-            sectionEnd //Add horizontal rule below the line
+            sectionEnd, //Add horizontal rule below the line
+            syncDirection
         }
 
         public void Update(StringBuilder moreOutput, Markup? markupPrefix = null, Boolean verbose = false, bool notifyBubble = false, Boolean logit = false) {
@@ -236,6 +238,8 @@ namespace OutlookGoogleCalendarSync {
             ///HtmlDocument doc = Forms.Main.Instance.GetControlPropertyThreadSafe(this.wb, "Document") as HtmlDocument;
             ///HtmlElement element = doc.GetElementById("content");
             ///HtmlElement element = doc.All["content"]; //Slightly faster
+            
+            if (Forms.Main.Instance.IsDisposed) return;
 
             if ((verbose && Settings.Instance.VerboseOutput) || !verbose) {
                 //Let's grab the 'content' div with regex
@@ -256,6 +260,8 @@ namespace OutlookGoogleCalendarSync {
                     String[] logLines = tagsStripped.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                     if (markupPrefix == Markup.warning)
                         logLines.ToList().ForEach(l => log.Warn(l));
+                    else if (markupPrefix == Markup.fail)
+                        logLines.ToList().ForEach(l => log.Fail(l));
                     else if (markupPrefix == Markup.error)
                         logLines.ToList().ForEach(l => log.Error(l));
                     else if (verbose)
@@ -270,14 +276,23 @@ namespace OutlookGoogleCalendarSync {
                 contentInnerHtml += htmlOutput + (newLine ? "<br/>" : "");
 
                 content = header + contentInnerHtml + footer;
-                this.wb.DocumentText = content;
-                
+                try {
+                    if (this.wb.InvokeRequired) {
+                        this.wb.Invoke((MethodInvoker)(() => {
+                            wb.DocumentText = content;
+                        }));
+                    } else
+                        this.wb.DocumentText = content;
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse(ex);
+                }
+
                 while (navigationStatus != NavigationStatus.completed) {
                     System.Threading.Thread.Sleep(250);
                     System.Windows.Forms.Application.DoEvents();
                 }
                 System.Windows.Forms.Application.DoEvents();
-                
+
                 if (Forms.Main.Instance.NotificationTray != null && notifyBubble & Settings.Instance.ShowBubbleTooltipWhenSyncing) {
                     Forms.Main.Instance.NotificationTray.ShowBubbleInfo("Issue encountered.\n" +
                         "Please review output on the main 'Sync' tab", ToolTipIcon.Warning);
@@ -286,7 +301,10 @@ namespace OutlookGoogleCalendarSync {
         }
 
         public void UpdateWithError(String moreOutput, System.Exception ex, bool notifyBubble = false) {
-            Update(moreOutput + (!string.IsNullOrEmpty(moreOutput) ? "<br/>" : "") + OGCSexception.FriendlyMessage(ex), Markup.error, notifyBubble: notifyBubble);
+            Markup emoji = Markup.error;
+            if (OGCSexception.LoggingAsFail(ex))
+                emoji = Markup.fail;
+            Update(moreOutput + (!string.IsNullOrEmpty(moreOutput) ? "<br/>" : "") + OGCSexception.FriendlyMessage(ex), emoji, notifyBubble: notifyBubble);
         }
 
         private String parseEmoji(String output, Markup? markupPrefix = null) {
@@ -296,8 +314,7 @@ namespace OutlookGoogleCalendarSync {
                 //div
                 output = Regex.Replace(output, ":info:(<p>)*", "<div class='info'>$1<span class='em em-information_source'></span>");
                 output = Regex.Replace(output, ":warning:(<p>)*", "<div class='warning'>$1<span class='em em-warning'></span>");
-                output = Regex.Replace(output, ":error:(<p>)*", "<div class='error'>$1<span class='em em-collision'></span>");
-                
+                output = Regex.Replace(output, ":(error|fail):(<p>)*", "<div class='error'>$2<span class='em em-collision'></span>");                
                 if (output.StartsWith("<div")) output += "</div>";
 
                 Regex rgx = new Regex(":clock(\\d{1,4}):<p>", RegexOptions.IgnoreCase);
@@ -311,6 +328,7 @@ namespace OutlookGoogleCalendarSync {
                 output = output.Replace(":h2:", "<h2 class='sectionHeader'>");
                 output = output.Replace(":mag_right:", "<h2 class='sectionHeader'><span class='em em-mag_right'></span>");
                 output = output.Replace(":checkered_flag:", "<h2 class='sectionHeader'><span class='em em-checkered_flag'></span>");
+                output = output.Replace(":syncDirection:", "<h2 class='sectionHeader'><span class='em em-repeat' style='padding-right: 9px; margin-left:-30px;'></span>");
                 if (output.StartsWith("<h2")) output += "</h2>";
 
                 //sectionEnd
@@ -412,7 +430,9 @@ namespace OutlookGoogleCalendarSync {
                     System.Windows.Forms.Application.DoEvents();
                     System.Threading.Thread.Sleep(100);
                 }
-            } catch { }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse(ex);
+            }
             log.Debug("Done");
         }
     }

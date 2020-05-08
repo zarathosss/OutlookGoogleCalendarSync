@@ -1,5 +1,6 @@
 ﻿using log4net;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -18,38 +19,39 @@ namespace OutlookGoogleCalendarSync {
         public static String ConfigFilename {
             get { return configFilename; }
         }
-        public static String ConfigDirectory;
         /// <summary>
         /// Absolute path to config file, eg C:\foo\bar\settings.xml
         /// </summary>
         public static String ConfigFile {
-            get { return Path.Combine(ConfigDirectory, ConfigFilename); }
+            get { return Path.Combine(Program.WorkingFilesDirectory, ConfigFilename); }
         }
 
         public static void InitialiseConfigFile(String filename, String directory = null) {
             if (!string.IsNullOrEmpty(filename)) configFilename = filename;
-            ConfigDirectory = directory;
+            Program.WorkingFilesDirectory = directory;
 
-            if (string.IsNullOrEmpty(ConfigDirectory)) {
+            if (string.IsNullOrEmpty(Program.WorkingFilesDirectory)) {
                 if (Program.IsInstalled || File.Exists(Path.Combine(Program.RoamingProfileOGCS, ConfigFilename)))
-                    ConfigDirectory = Program.RoamingProfileOGCS;
+                    Program.WorkingFilesDirectory = Program.RoamingProfileOGCS;
                 else
-                    ConfigDirectory = System.Windows.Forms.Application.StartupPath;
+                    Program.WorkingFilesDirectory = System.Windows.Forms.Application.StartupPath;
             }
 
             if (!File.Exists(ConfigFile)) {
-                log.Info("No settings.xml file found in " + ConfigDirectory);
+                log.Info("No settings.xml file found in " + Program.MaskFilePath(Program.WorkingFilesDirectory));
                 Settings.Instance.Save(ConfigFile);
                 log.Info("New blank template created.");
                 if (!Program.IsInstalled)
                     XMLManager.ExportElement("Portable", true, ConfigFile);
             }
 
-            log.Info("Running OGCS from " + System.Windows.Forms.Application.ExecutablePath);
+            log.Info("Running OGCS from " + Program.MaskFilePath(System.Windows.Forms.Application.ExecutablePath));
         }
 
         private static Settings instance;
         //Settings saved immediately
+        private String assignedClientIdentifier;
+        private String assignedClientSecret;
         private Boolean apiLimit_inEffect;
         private DateTime apiLimit_lastHit;
         private DateTime lastSyncDate;
@@ -58,7 +60,10 @@ namespace OutlookGoogleCalendarSync {
         private Boolean alphaReleases;
         private String version;
         private Boolean donor;
+        private DateTime subscribed;
         private Boolean hideSplashScreen;
+        private Boolean suppressSocialPopup;
+        private bool? cloudLogging;
 
         public Settings() {
             setDefaults();
@@ -85,6 +90,7 @@ namespace OutlookGoogleCalendarSync {
             OnlyRespondedInvites = false;
             OutlookDateFormat = "g";
             outlookGalBlocked = false;
+            TimezoneMaps = new TimezoneMappingDictionary();
 
             UseGoogleCalendar = new GoogleCalendarListEntry();
             apiLimit_inEffect = false;
@@ -103,6 +109,7 @@ namespace OutlookGoogleCalendarSync {
             AddDescription_OnlyToGoogle = true;
             AddReminders = false;
             UseGoogleDefaultReminder = false;
+            UseOutlookDefaultReminder = false;
             ReminderDND = false;
             ReminderDNDstart = DateTime.Now.Date.AddHours(22);
             ReminderDNDend = DateTime.Now.Date.AddDays(1).AddHours(6);
@@ -117,6 +124,7 @@ namespace OutlookGoogleCalendarSync {
             SetEntriesAvailable = false;
             SetEntriesColour = false;
             SetEntriesColourValue = Microsoft.Office.Interop.Outlook.OlCategoryColor.olCategoryColorNone.ToString();
+            SetEntriesColourName = "None";
             Obfuscation = new Obfuscate();
 
             MuteClickSounds = false;
@@ -130,15 +138,19 @@ namespace OutlookGoogleCalendarSync {
 
             CreateCSVFiles = false;
             LoggingLevel = "DEBUG";
+            cloudLogging = null;
             portable = false;
             Proxy = new SettingsProxy();
 
             alphaReleases = !System.Windows.Forms.Application.ProductVersion.EndsWith("0.0");
             SkipVersion = null;
-            Subscribed = DateTime.Parse("01-Jan-2000");
+            subscribed = DateTime.Parse("01-Jan-2000");
             donor = false;
             hideSplashScreen = false;
-            
+            suppressSocialPopup = false;
+
+            ExtirpateOgcsMetadata = false;
+
             lastSyncDate = new DateTime(0);
             completedSyncs = 0;
             VerboseOutput = true;
@@ -178,9 +190,17 @@ namespace OutlookGoogleCalendarSync {
                 if (!loading() && Forms.Main.Instance.IsHandleCreated) Forms.Main.Instance.FeaturesBlockedByCorpPolicy(value);
             }
         }
+
+        [DataMember] public TimezoneMappingDictionary TimezoneMaps { get; private set; }
+        [CollectionDataContract(
+            ItemName = "TimeZoneMap",
+            KeyName = "OrganiserTz",
+            ValueName = "SystemTz",
+            Namespace = "http://schemas.datacontract.org/2004/07/OutlookGoogleCalendarSync"
+        )]
+        public class TimezoneMappingDictionary : Dictionary<String, String> { }
         #endregion
         #region Google
-        private String assignedClientIdentifier;
         [DataMember] public String AssignedClientIdentifier {
             get { return assignedClientIdentifier; }
             set {
@@ -188,7 +208,6 @@ namespace OutlookGoogleCalendarSync {
                 if (!loading()) XMLManager.ExportElement("AssignedClientIdentifier", value.Trim(), ConfigFile);
             }
         }
-        private String assignedClientSecret;
         [DataMember] public String AssignedClientSecret {
             get { return assignedClientSecret; }
             set {
@@ -246,6 +265,7 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool AddDescription_OnlyToGoogle { get; set; }
         [DataMember] public bool AddReminders { get; set; }
         [DataMember] public bool UseGoogleDefaultReminder { get; set; }
+        [DataMember] public bool UseOutlookDefaultReminder { get; set; }
         [DataMember] public bool ReminderDND { get; set; }
         [DataMember] public DateTime ReminderDNDstart { get; set; }
         [DataMember] public DateTime ReminderDNDend { get; set; }
@@ -260,6 +280,7 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool SetEntriesAvailable { get; set; }
         [DataMember] public bool SetEntriesColour { get; set; }
         [DataMember] public String SetEntriesColourValue { get; set; }
+        [DataMember] public String SetEntriesColourName { get; set; }
         
         //Obfuscation
         [DataMember] public Obfuscate Obfuscation { get; set; }
@@ -277,6 +298,16 @@ namespace OutlookGoogleCalendarSync {
             }
         }
 
+        [DataMember] public bool SuppressSocialPopup {
+            get { return suppressSocialPopup; }
+            set {
+                if (!loading() && suppressSocialPopup != value) {
+                    XMLManager.ExportElement("SuppressSocialPopup", value, ConfigFile);
+                    if (Forms.Main.Instance != null) Forms.Main.Instance.cbSuppressSocialPopup.Checked = value;
+                }
+                suppressSocialPopup = value;
+            }
+        }
         [DataMember] public bool ShowBubbleTooltipWhenSyncing { get; set; }
         [DataMember] public bool StartOnStartup { get; set; }
         [DataMember] public Int32 StartupDelay { get; set; }
@@ -294,6 +325,16 @@ namespace OutlookGoogleCalendarSync {
 
         [DataMember] public bool CreateCSVFiles { get; set; }
         [DataMember] public String LoggingLevel { get; set; }
+        [DataMember] public bool? CloudLogging {
+            get { return cloudLogging; }
+            set {
+                cloudLogging = value;
+                GoogleOgcs.ErrorReporting.SetThreshold(value ?? false);
+                if (value == null) GoogleOgcs.ErrorReporting.ErrorOccurred = false;
+                if (!loading()) XMLManager.ExportElement("CloudLogging", value, ConfigFile);
+            }
+        }
+        [DataMember] public bool TelemetryDisabled { get; set; }
         //Proxy
         [DataMember] public SettingsProxy Proxy { get; set; }
         #endregion
@@ -314,7 +355,16 @@ namespace OutlookGoogleCalendarSync {
                 if (!loading()) XMLManager.ExportElement("AlphaReleases", value, ConfigFile);
             }
         }
-        [DataMember] public DateTime Subscribed { get; set; }
+        public Boolean UserIsBenefactor() {
+            return Subscribed != DateTime.Parse("01-Jan-2000") || donor;
+        }
+        [DataMember] public DateTime Subscribed {
+            get { return subscribed; }
+            set {
+                subscribed = value;
+                if (!loading()) XMLManager.ExportElement("Subscribed", value, ConfigFile);
+            }
+        }
         [DataMember] public Boolean Donor {
             get { return donor; }
             set {
@@ -322,6 +372,10 @@ namespace OutlookGoogleCalendarSync {
                 if (!loading()) XMLManager.ExportElement("Donor", value, ConfigFile);
             }
         }
+        #endregion
+        #region Advanced - Non GUI
+        [DataMember]
+        public Boolean ExtirpateOgcsMetadata { get; private set; }
         #endregion
 
         [DataMember] public DateTime LastSyncDate {
@@ -342,17 +396,20 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool MuteClickSounds { get; set; }
         [DataMember] public String SkipVersion { get; set; }
 
-        public static void Load(string XMLfile = null) {
+        private static Boolean isLoaded = false;
+        public static Boolean IsLoaded {
+            get { return isLoaded; }
+        }
+
+        public static void Load(String XMLfile = null) {
             try {
                 Settings.Instance = XMLManager.Import<Settings>(XMLfile ?? ConfigFile);
                 log.Fine("User settings loaded.");
+                Settings.isLoaded = true;
+
             } catch (ApplicationException ex) {
                 log.Error(ex.Message);
-                System.Windows.Forms.MessageBox.Show("Your OGCS settings appear to be corrupt and will have to be reset.",
-                    "Corrupt OGCS Settings", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
-                log.Warn("Resetting settings.xml file to defaults.");
-                System.IO.File.Delete(XMLfile ?? ConfigFile);
-                Settings.Instance.Save(XMLfile ?? ConfigFile);
+                ResetFile(XMLfile);
                 try {
                     Settings.Instance = XMLManager.Import<Settings>(XMLfile ?? ConfigFile);
                     log.Debug("User settings loaded successfully this time.");
@@ -363,7 +420,15 @@ namespace OutlookGoogleCalendarSync {
             }
         }
 
-        public void Save(string XMLfile = null) {
+        public static void ResetFile(String XMLfile = null) {
+            System.Windows.Forms.OgcsMessageBox.Show("Your OGCS settings appear to be corrupt and will have to be reset.",
+                    "Corrupt OGCS Settings", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
+            log.Warn("Resetting settings.xml file to defaults.");
+            System.IO.File.Delete(XMLfile ?? ConfigFile);
+            Settings.Instance.Save(XMLfile ?? ConfigFile);
+        }
+
+        public void Save(String XMLfile = null) {
             log.Info("Saving settings.");
             XMLManager.Export(this, XMLfile ?? ConfigFile);
         }
@@ -393,9 +458,13 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  Only Responded Invites: " + OnlyRespondedInvites);
             log.Info("  Filter String: " + OutlookDateFormat);
             log.Info("  GAL Blocked: " + OutlookGalBlocked);
+            if (TimezoneMaps.Count > 0) {
+                log.Info("  Custom Timezone Mapping:-");
+                TimezoneMaps.ToList().ForEach(tz => log.Info("    " + tz.Key + " => " + tz.Value));
+            }
             
             log.Info("GOOGLE SETTINGS:-");
-            log.Info("  Calendar: " + UseGoogleCalendar.Name);
+            log.Info("  Calendar: " + (UseGoogleCalendar == null ? "" : UseGoogleCalendar.ToString()));
             log.Info("  Personal API Keys: " + UsingPersonalAPIkeys());
             log.Info("    Client Identifier: " + PersonalClientIdentifier);
             log.Info("    Client Secret: " + (PersonalClientSecret.Length < 5
@@ -414,7 +483,7 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  ConfirmOnDelete: " + ConfirmOnDelete);
             log.Info("  SetEntriesPrivate: " + SetEntriesPrivate);
             log.Info("  SetEntriesAvailable: " + SetEntriesAvailable);
-            log.Info("  SetEntriesColour: " + SetEntriesColour + (SetEntriesColour ? "; " + SetEntriesColourValue : ""));
+            log.Info("  SetEntriesColour: " + SetEntriesColour + (SetEntriesColour ? "; " + SetEntriesColourValue + "; \"" + SetEntriesColourName + "\"" : ""));
             if ((SetEntriesPrivate || SetEntriesAvailable || SetEntriesColour) && SyncDirection == Sync.Direction.Bidirectional) {
                 log.Info("    TargetCalendar: " + TargetCalendar.Name);
                 log.Info("    CreatedItemsOnly: " + CreatedItemsOnly);
@@ -441,6 +510,7 @@ namespace OutlookGoogleCalendarSync {
             log.Info("  AddColours: " + AddColours);
             log.Info("  AddReminders: " + AddReminders);
             log.Info("    UseGoogleDefaultReminder: " + UseGoogleDefaultReminder);
+            log.Info("    UseOutlookDefaultReminder: " + UseOutlookDefaultReminder);
             log.Info("    ReminderDND: " + ReminderDND + " (" + ReminderDNDstart.ToString("HH:mm") + "-" + ReminderDNDend.ToString("HH:mm") + ")");
             
             log.Info("PROXY:-");
@@ -458,7 +528,8 @@ namespace OutlookGoogleCalendarSync {
             log.Info("APPLICATION BEHAVIOUR:-");
             log.Info("  ShowBubbleTooltipWhenSyncing: " + ShowBubbleTooltipWhenSyncing);
             log.Info("  StartOnStartup: " + StartOnStartup + "; DelayedStartup: "+ StartupDelay.ToString());
-            log.Info("  HideSplashScreen: " + ((Subscribed != DateTime.Parse("01-Jan-2000") || Donor) ? HideSplashScreen.ToString() : "N/A"));
+            log.Info("  HideSplashScreen: " + (UserIsBenefactor() ? HideSplashScreen.ToString() : "N/A"));
+            log.Info("  SuppressSocialPopup: " + (UserIsBenefactor() ? SuppressSocialPopup.ToString() : "N/A"));
             log.Info("  StartInTray: " + StartInTray);
             log.Info("  MinimiseToTray: " + MinimiseToTray);
             log.Info("  MinimiseNotClose: " + MinimiseNotClose);
@@ -471,6 +542,7 @@ namespace OutlookGoogleCalendarSync {
             //To pick up from settings.xml file:
             //((log4net.Repository.Hierarchy.Hierarchy)log.Logger.Repository).Root.Level.Name);
             log.Info("  Logging Level: "+ LoggingLevel);
+            log.Info("  Error Reporting: " + CloudLogging ?? "Undefined");
 
             log.Info("ABOUT:-");
             log.Info("  Alpha Releases: " + alphaReleases);

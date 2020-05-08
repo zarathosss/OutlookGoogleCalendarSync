@@ -13,9 +13,11 @@ namespace OutlookGoogleCalendarSync.Forms {
         private static Boolean donor;
         private static DateTime subscribed;
         private static Boolean initialised = false;
+        public static Boolean BeenAndGone { get; private set; }
 
         public Splash() {
             InitializeComponent();
+            BeenAndGone = false;
         }
 
         public static void ShowMe() {
@@ -72,24 +74,23 @@ namespace OutlookGoogleCalendarSync.Forms {
                 splashThread.Abort();
             } finally {
                 initialised = true;
+                BeenAndGone = true;
             }
         }
 
         public static void CloseMe() {
+            if (splash == null) return;
+
             if (splash.InvokeRequired) {
                 splash.Invoke(new MethodInvoker(CloseMe));
             } else {
                 if (!splash.IsDisposed) splash.Close();
             }
+            BeenAndGone = true;
         }
 
         private void pbDonate_Click(object sender, EventArgs e) {
-            Social.Donate();
-            this.Close();
-        }
-
-        private void pbSocialGplusCommunity_Click(object sender, EventArgs e) {
-            Social.Google_goToCommunity();
+            Program.Donate();
             this.Close();
         }
 
@@ -100,7 +101,7 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void Splash_Shown(object sender, EventArgs e) {
             splash.Tag = DateTime.Now;
-            while (DateTime.Now < ((DateTime)splash.Tag).AddSeconds((System.Diagnostics.Debugger.IsAttached ? 2 : 8)) && !splash.IsDisposed) {
+            while (DateTime.Now < ((DateTime)splash.Tag).AddSeconds((Program.InDeveloperMode ? 2 : 8)) && !splash.IsDisposed) {
                 splash.BringToFront();
                 splash.TopLevel = true;
                 splash.TopMost = true;

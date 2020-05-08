@@ -10,8 +10,7 @@ namespace OutlookGoogleCalendarSync.Sync {
         public DateTime? NextSyncDate { 
             get {
                 try {
-                    if (Forms.Main.Instance.NextSyncVal == "Inactive" || !ogcsTimer.Enabled || 
-                        Forms.Main.Instance.NextSyncVal == "Push Sync Active") {
+                    if ("Inactive;Push Sync Active;In progress...".Contains(Forms.Main.Instance.NextSyncVal) || !ogcsTimer.Enabled) {
                         return null;
                     } else {
                         return DateTime.ParseExact(Forms.Main.Instance.NextSyncVal.Replace(" + Push",""),
@@ -39,6 +38,7 @@ namespace OutlookGoogleCalendarSync.Sync {
         }
 
         private void ogcsTimer_Tick(object sender, EventArgs e) {
+            if (Forms.ErrorReporting.Instance.Visible) return;
             log.Debug("Scheduled sync triggered.");
 
             Forms.Main frm = Forms.Main.Instance;
@@ -138,6 +138,7 @@ namespace OutlookGoogleCalendarSync.Sync {
         }
 
         private void ogcsPushTimer_Tick(object sender, EventArgs e) {
+            if (Forms.ErrorReporting.Instance.Visible) return;
             log.Fine("Push sync triggered.");
 
             try {

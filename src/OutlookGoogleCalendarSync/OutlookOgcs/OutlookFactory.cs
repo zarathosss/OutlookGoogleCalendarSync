@@ -30,17 +30,21 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         private static void getOutlookVersion() {
             //Attach just to get Outlook version - we don't know whether to provide New or Old interface yet
             Microsoft.Office.Interop.Outlook.Application oApp = null;
+            OutlookOgcs.Calendar.AttachToOutlook(ref oApp);
             try {
-                OutlookOgcs.Calendar.AttachToOutlook(ref oApp);
                 outlookVersionFull = oApp.Version;
 
                 log.Info("Outlook Version: " + outlookVersionFull);
                 if (testing2003) {
+                    #pragma warning disable 162 //Unreachable code
                     log.Info("*** 2003 TESTING ***");
                     outlookVersionFull = "11";
+                    #pragma warning restore 162
                 }
                 outlookVersion = Convert.ToInt16(outlookVersionFull.Split(Convert.ToChar("."))[0]);
 
+            } catch (System.Exception ex) {
+                OutlookOgcs.Calendar.PoorlyOfficeInstall(ex);
             } finally {
                 if (oApp != null) {
                     System.Runtime.InteropServices.Marshal.FinalReleaseComObject(oApp);
@@ -49,7 +53,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             }
         }
 
-        public static Boolean is2003() {
+        public static Boolean Is2003() {
             return outlookVersionFull == "11";
         }
     }

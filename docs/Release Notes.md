@@ -1,6 +1,153 @@
 | Release Notes |
 |:---|
 
+# v2.8.3.0 - Alpha
+
+**Enhancements**
+- Provision for custom timezone mapping when required for meeting organiser in different timezone
+- Handle when corporate policy/AV blocks access to current user's name in Outlook
+
+**Bugfix**
+- Handle mailboxes that have no Deleted Items folder
+- Check configured Outlook mailbox and calendar are stil available on startup
+- Properly detect sync direction when forcing attributes in target calendar
+- Only update category/colour if configured to
+- Don't attempt to sync colours for recurring series exceptions
+- Take into account DST for UTC offsets
+- Handle recurrence end dates with no time element
+- Ensure start/end Event values are populated
+- Encode CSVs to UTF8
+- Fix error reporting DLL reference
+
+# v2.8.2.0 - Alpha
+
+**Enhancements**
+- Use any configured proxy for _all_ web calls
+- New `/t` command line option to append custom text to application title
+- Don't attempt update of recurring Google series owned by another
+- Pop-up message boxes now associated with main application form
+- Improved feedback on API quota exhausted
+- Ability to disable telemetry
+
+**Bugfix**
+- Convert recurrence end date to local time
+- Error reporting DLLs updated
+
+# v2.8.1.0 - Alpha
+
+**Enhancements**
+- Set Outlook organisers as having "accepted" in Google
+- Order the Google calendar dropdown: primary, writeable, read-only
+- Warn if read-only calendar selected for sync; deny for two-way sync
+- Display custom Google calendar name, if set
+- Third-party DLLs updated
+
+**Bugfix**
+- Better error handling if Outlook closed mid-sync
+- Fix missing last occurrence in Google for recurring series from Outlook
+- Report correct COM error code and redirect to wiki for published solution
+- Don't crash after upgrade if user doesn't have access to system registry
+- Fixed subscribers not picking up correct API key
+- Only allow single Error Reporting window
+- Don't allow sync if Error Reporting window displaying
+
+# v2.8.0.0 - Beta
+
+**Enhancements** rolled in from Alpha releases
+- Sync colours / categories
+- Option to force particular colour for synced items
+- Option to not sync Outlook invites you have yet to responded to
+- Syncing a common calendar to/from more than one other now supported!
+- Added option for users to automatically feedback errors
+- Command line parameters to support multi-instance OGCS
+- Better ability to cancel a running sync
+- OGCS stays responsive whilst Oauth process takes place; can be cancelled
+- Detect Windows system timezone changes
+- Improved Push sync mechanism
+- Collapsible sections added to Sync Options configuration screen
+- Properly retrieve meeting organiser's timezone
+- G->O: Allow synced items to be assigned specific category (not just colour)
+- Show authorised Google account on Settings tab
+- Better timing of auto-retry for when quota renewed after API exhausted
+- Option to configure the browser's User Agent in the GUI
+- Options to use (or not) Outlook/Google calendar defaults for reminders
+- Don't update last sync date if sync unsuccessful
+- New window for social links; option to suppress for donors
+- Redirect users with COM errors (bad Office installs) to wiki help page
+- Use the OGCS logo for system tray notifications
+----
+# v2.7.9.0 - Alpha
+
+**Enhancements**
+- Redirect users with COM errors (bad Office installs) to wiki help page
+- If GAL is blocked don't report this as an error.
+- Don't access Outlook appointment organiser if GAL blocked by policy
+- Silently fail if check for OGCS update errors.
+- Use the OGCS logo for system tray notifications
+
+**Bugfix**
+- Copy and paste / click and drag Outlook appointment causing null references
+- Check for custom Google reminders before setting default
+- Improved handling of Exchange errors when obtaining attendee mail addresses
+- Incorrect timezone offset for appointments in Outlook 2003
+
+# v2.7.8.0 - Alpha
+
+**Enhancements**
+- Remove Google+ related links and API calls
+- Don't update last sync date if sync unsuccessful
+- New window for social links; option to suppress for donors
+- Faster matching of calendar items
+- New advanced setting to extirpate all OGCS custom properties
+
+**Bugfix**
+- Don't try and update master Event custom attributes
+- Only compare colour/category if set to be synced
+- Email address cloaking
+- Don't reselect Google calendar when re-downloading list
+
+# v2.7.7.0 - Alpha
+
+**Enhancements**
+- Better timing of auto-retry for when quota renewed after API exhausted
+- Option to configure the browser's User Agent in the GUI
+- Options to use (or not) Outlook/Google calendar defaults for reminders
+
+**Bugfix**
+- Persist a push sync through a restart of Outlook
+- Persist selection of correct calendar when alternate mailbox is temporarily unavailable
+- Select correct alternate mailbox on startup
+- Handle a Google event having an end date _before_ the start date
+- Reminder DND window not always applying correctly
+
+# v2.7.6.0 - Alpha
+
+**Enhancements**
+- Syncing a common calendar to/from more than one other now supported!
+- Improved logic to determine meeting organiser's timezone
+- Don't delete Google event immediately after reclaiming it
+- New FAIL logging level added, below Error
+- Nicer output when authenticating with Google and reclaiming items
+- Show authorised Google account on Settings tab
+
+**Bugfix**
+- Fixed XML namespace for obfuscation sync direction
+- Stopped error reporting obstructing Squirrel events
+- Fixed crash on OGCS automated startup 
+- Don't try and retrieve Google event if synced from different calendar (avoid 404 errors)
+
+# v2.7.5.0 - Alpha
+
+**Enhancements**
+- Properly retrieve meeting organiser's timezone
+- Suggest manual start of Outlook if OGCS not permitted
+- G->O: Allow synced items to be assigned specific category (not just colour)
+- Added option for users to automatically feedback errors
+
+**Bugfix**
+- Google token expiry not calculated in UTC
+- Regression: Properly release Outlook if no Outlook GUI
+
 # v2.7.4.0 - Alpha
 
 **Enhancements**
