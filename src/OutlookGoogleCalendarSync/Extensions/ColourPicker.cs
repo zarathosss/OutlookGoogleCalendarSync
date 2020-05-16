@@ -19,26 +19,37 @@ namespace OutlookGoogleCalendarSync.Extensions {
             }
         }
 
-        public ColourPicker() {            
+        public enum ColourType {
+            OutlookStandardColours,
+            OutlookCategoryColours
+        }
+
+        public ColourPicker() {
             DropDownStyle = ComboBoxStyle.DropDownList;
             DrawMode = DrawMode.OwnerDrawFixed;
-            AddStandardColours();
             DrawItem += ColourPicker_DrawItem;
         }
 
-        public void AddStandardColours() {
-            Items.Clear();
+        public void AddColourItems(ColourType? type) {
+            if (type == null)
+                Items.Clear();
+            if (type == null || type == ColourType.OutlookCategoryColours)
+                AddCategoryColours();
+            if (type == null || type == ColourType.OutlookStandardColours)
+                addStandardColours();
+        }
+
+        private void addStandardColours() {
             foreach (KeyValuePair<OlCategoryColor, Color> colour in OutlookOgcs.CategoryMap.Colours) {
                 Items.Add(new ColourInfo(colour.Key, colour.Value));
             }
-            
         }
+
         public void AddCategoryColours() {
-            AddStandardColours();
             Items.AddRange(OutlookOgcs.Calendar.Categories.DropdownItems().OrderBy(x => x.Text).ToArray());
         }
 
-        private void ColourPicker_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e) {
+        public void ColourPicker_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e) {
             if (e.Index >= 0) {
                 Boolean enabled = (sender as ComboBox).Enabled;
                 // Get the colour

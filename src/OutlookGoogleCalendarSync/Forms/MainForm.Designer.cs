@@ -249,6 +249,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.pbSocialDonate = new System.Windows.Forms.PictureBox();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.btColourMap = new System.Windows.Forms.Button();
             this.tabApp.SuspendLayout();
             this.tabPage_Sync.SuspendLayout();
             this.consolePanel.SuspendLayout();
@@ -1630,6 +1631,7 @@
             // 
             this.gbSyncOptions_What.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbSyncOptions_What.Controls.Add(this.btColourMap);
             this.gbSyncOptions_What.Controls.Add(this.cbCloakEmail);
             this.gbSyncOptions_What.Controls.Add(this.lDNDand);
             this.gbSyncOptions_What.Controls.Add(this.dtDNDend);
@@ -3029,6 +3031,19 @@
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
             this.trayIcon.Text = "Outlook Google Calendar Sync";
             // 
+            // btColourMap
+            // 
+            this.btColourMap.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btColourMap.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.btColourMap.Location = new System.Drawing.Point(134, 93);
+            this.btColourMap.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.btColourMap.Name = "btColourMap";
+            this.btColourMap.Size = new System.Drawing.Size(75, 21);
+            this.btColourMap.TabIndex = 46;
+            this.btColourMap.Text = "Mappings";
+            this.btColourMap.UseVisualStyleBackColor = true;
+            this.btColourMap.Click += new System.EventHandler(this.btColourMap_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3311,5 +3326,6 @@
         private System.Windows.Forms.Button btFbLike;
         private System.Windows.Forms.CheckBox cbTelemetryDisabled;
         public System.Windows.Forms.Button btCustomTzMap;
+        private System.Windows.Forms.Button btColourMap;
     }
 }

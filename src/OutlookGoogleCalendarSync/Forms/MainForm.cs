@@ -308,8 +308,9 @@ namespace OutlookGoogleCalendarSync.Forms {
             cbDisableDeletion.Checked = Settings.Instance.DisableDelete;
             cbConfirmOnDelete.Enabled = !Settings.Instance.DisableDelete;
             cbConfirmOnDelete.Checked = Settings.Instance.ConfirmOnDelete;
+            
+            //Obfuscate Options
             cbOfuscate.Checked = Settings.Instance.Obfuscation.Enabled;
-            //More Options
             howObfuscatePanel.Visible = false;
             if (Settings.Instance.SyncDirection == Sync.Direction.Bidirectional) {
                 tbCreatedItemsOnly.SelectedIndex = Settings.Instance.CreatedItemsOnly ? 1 : 0;
@@ -324,6 +325,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             cbPrivate.Checked = Settings.Instance.SetEntriesPrivate;
             cbAvailable.Checked = Settings.Instance.SetEntriesAvailable;
             cbColour.Checked = Settings.Instance.SetEntriesColour;
+            ddCategoryColour.AddColourItems(null);
             foreach (Extensions.ColourPicker.ColourInfo cInfo in ddCategoryColour.Items) {
                 if (cInfo.OutlookCategory.ToString() == Settings.Instance.SetEntriesColourValue &&
                     cInfo.Text == Settings.Instance.SetEntriesColourName) {
@@ -1487,6 +1489,9 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
         private void cbAddColours_CheckedChanged(object sender, EventArgs e) {
             Settings.Instance.AddColours = cbAddColours.Checked;
+        }
+        private void btColourMap_Click(object sender, EventArgs e) {
+            new Forms.ColourMap().ShowDialog(this);
         }
         #endregion
         #endregion
