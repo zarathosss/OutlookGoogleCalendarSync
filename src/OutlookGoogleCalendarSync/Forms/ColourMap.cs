@@ -10,6 +10,8 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private static readonly ILog log = LogManager.GetLogger(typeof(ColourMap));
         private Extensions.ColourPicker outlookComboBox = new OutlookGoogleCalendarSync.Extensions.ColourPicker();
+        private Extensions.ColourPicker googleComboBox = new OutlookGoogleCalendarSync.Extensions.ColourPicker();
+        //private Extensions.DataGridViewCustomPaintComboBoxColumn foo = new Extensions.DataGridViewCustomPaintComboBoxColumn();
 
         public ColourMap() {
             InitializeComponent();
@@ -40,6 +42,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 colourGridView.Columns.Add(col);
 
                 //Replace existing Google column with custom dropdown
+                googleComboBox.AddCategoryColours();
                 //GoogleOgcs.Calendar.Instance.ColourPalette.Get();
 
                 col = colourGridView.Columns[googleCol] as DataGridViewComboBoxColumn;
@@ -158,15 +161,60 @@ namespace OutlookGoogleCalendarSync.Forms {
         private void colourGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e) {
             try {
                 if (e.Control is ComboBox) {
-                    DataGridViewComboBoxEditingControl cb = (DataGridViewComboBoxEditingControl)e.Control;
+                    ComboBox cb = e.Control as ComboBox;
                     cb.DrawMode = DrawMode.OwnerDrawFixed;
                     cb.DrawItem -= this.outlookComboBox.ColourPicker_DrawItem;
                     cb.DrawItem += this.outlookComboBox.ColourPicker_DrawItem;
+                    cb.SelectedIndexChanged -= colourGridView_SelectedIndexChanged;
+                    cb.SelectedIndexChanged += colourGridView_SelectedIndexChanged;
                 }
             } catch (System.Exception ex) {
                 OGCSexception.Analyse(ex);
             }
         }
         #endregion
+
+
+        private void colourGridView_SelectedIndexChanged(object sender, EventArgs e) {
+            //((ComboBox)sender).BackColor = System.Drawing.Color.Red; // (System.Drawing.Color)((ComboBox)sender).SelectedItem;
+            //colourGridView.CurrentCell.ba
+        }
+
+        private void colourGridView_CurrentCellDirtyStateChanged(object sender, EventArgs e) {
+            log.Debug("colourGridView_CurrentCellDirtyStateChanged");
+            //colourGridView.CurrentCell.Style.BackColor = System.Drawing.Color.Blue;
+            DataGridViewColumn col = colourGridView.Columns[colourGridView.CurrentCell.ColumnIndex];
+            //if (col is DataGridViewComboBoxColumn) {
+            //    colourGridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            //    colourGridView.EndEdit();
+            //}
+            //colourGridView.celEditingControl
+            
+        }
+
+        private void colourGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e) {
+            log.Debug("CellEndEdit");
+            //colourGridView.CurrentCell.Style.BackColor = System.Drawing.Color.Blue;
+        }
+
+        private void colourGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e) {
+            log.Debug("CellFormatting");
+            //colourGridView.CurrentCell
+            
+        }
+
+        private void colourGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e) {
+            log.Debug("colourGridView_CellValueChanged");
+
+
+        }
+
+        private void colourGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {
+            log.Debug("colourGridView_CellPainting "+ e.RowIndex +":"+ e.ColumnIndex);
+            //e.PaintBackground(e.ClipBounds, true);
+            //e.PaintContent(e.ClipBounds);
+            //e.CellStyle.BackColor = System.Drawing.Color.Red;
+            //e.Handled = true;
+        }
     }
 }

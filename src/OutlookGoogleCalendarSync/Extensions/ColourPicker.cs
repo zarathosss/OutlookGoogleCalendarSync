@@ -89,4 +89,91 @@ namespace OutlookGoogleCalendarSync.Extensions {
             set { base.SelectedItem = value; }
         }
     }
+
+    public class DataGridViewColourComboBoxColumn : DataGridViewComboBoxColumn {
+        public DataGridViewColourComboBoxColumn() {
+            this.CellTemplate = new DataGridViewColourComboBoxCell();
+        }
+
+        //public DataGridViewColourComboBoxColumn() : base() { }
+
+        //public override DataGridViewCell CellTemplate {
+        //    get {
+        //        return base.CellTemplate;
+        //    }
+        //    set {
+        //        // Ensure that the cell used for the template is a CalendarCell.
+        //        if (value != null &&
+        //            !value.GetType().IsAssignableFrom(typeof(DataGridViewColourComboBoxCell))) {
+        //            throw new InvalidCastException("Must be a DataGridViewColourComboBoxCell");
+        //        }
+        //        base.CellTemplate = value;
+        //    }
+        //}
+    }
+
+    
+
+    public class DataGridViewColourComboBoxCell : DataGridViewComboBoxCell {
+
+        //public override Type EditType {
+        //    get { return typeof(DataGridViewCustomPaintComboBoxEditingControl); }
+        //}
+
+        //public DataGridViewColourComboBoxCell() : base() { }
+
+        protected override void Paint(System.Drawing.Graphics graphics, System.Drawing.Rectangle clipBounds, System.Drawing.Rectangle cellBounds, int rowIndex, System.Windows.Forms.DataGridViewElementStates elementState, object value, object formattedValue, string errorText, System.Windows.Forms.DataGridViewCellStyle cellStyle, System.Windows.Forms.DataGridViewAdvancedBorderStyle advancedBorderStyle, System.Windows.Forms.DataGridViewPaintParts paintParts) {
+            //Paint inactive cells
+            base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
+
+            Boolean enabled = true; // (base as ComboBox).Enabled;
+            // Get the colour
+            //ColourInfo colour = (ColourInfo)Items[e.Index];
+
+            // Fill background
+            //graphics.FillRectangle(new SolidBrush(Color.White), cellBounds); //(sender as ComboBox).BackColor = enabled ? Color.White : Color.FromArgb(240, 240, 240);
+            
+            // Draw colour box
+            Rectangle colourbox = new Rectangle();
+            colourbox.X = cellBounds.X + 2;
+            colourbox.Y = cellBounds.Y + 2;
+            colourbox.Height = cellBounds.Height - 5; // ((colourbox.Y - cellBounds.Height) * 2);
+            colourbox.Width = 18;
+            graphics.FillRectangle(new SolidBrush(/*colour.Colour*/System.Drawing.Color.Red), colourbox);
+            graphics.DrawRectangle(enabled ? SystemPens.WindowText : SystemPens.InactiveBorder, colourbox);
+
+            // Write colour name
+            Brush brush;
+            //if ((e.State & DrawItemState.Selected) != DrawItemState.None)
+            //    brush = enabled ? SystemBrushes.HighlightText : SystemBrushes.InactiveCaptionText;
+            //else
+                brush = enabled ? SystemBrushes.WindowText : SystemBrushes.InactiveCaptionText;
+            graphics.DrawString("The colour", Control.DefaultFont, brush,
+                /*cellBounds.X +*/ colourbox.X + colourbox.Width + 2,
+                cellBounds.Y + ((cellBounds.Height - Control.DefaultFont.Height) / 2));
+
+            //// Draw the focus rectangle if appropriate
+            //if ((e.State & DrawItemState.NoFocusRect) == DrawItemState.None)
+            //    e.DrawFocusRectangle();
+        }
+
+    }
+
+    public class DataGridViewCustomPaintComboBoxEditingControl : DataGridViewComboBoxEditingControl {
+        public override Color BackColor { // property override only for testing
+            get { return base.BackColor /*Color.Fuchsia*/; }    // test value works as expected
+            set { base.BackColor = value; }
+        }
+
+        protected override void OnPaint(PaintEventArgs e) // never called - why?
+        {
+            base.OnPaint(e);
+        }
+
+        protected override void OnDrawItem(DrawItemEventArgs e)  // never called - why?
+        {
+            //base.OnDrawItem(e);
+            //base.BackColor = System.Drawing.Color.Red;
+        }
+    }
 }
