@@ -25,8 +25,8 @@
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ColourMap));
             this.colourGridView = new System.Windows.Forms.DataGridView();
-            this.OutlookColour = new OutlookGoogleCalendarSync.Extensions.DataGridViewColourComboBoxColumn();
-            this.GoogleColour = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.OutlookColour = new OutlookGoogleCalendarSync.Extensions.DataGridViewOutlookColourComboBoxColumn();
+            this.GoogleColour = new OutlookGoogleCalendarSync.Extensions.DataGridViewGoogleColourComboBoxColumn();
             this.btSave = new System.Windows.Forms.Button();
             this.btCancel = new System.Windows.Forms.Button();
             this.txtInfo = new System.Windows.Forms.TextBox();
@@ -69,10 +69,11 @@
             // GoogleColour
             // 
             this.GoogleColour.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.GoogleColour.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
             this.GoogleColour.FillWeight = 50F;
             this.GoogleColour.HeaderText = "Google Colour";
             this.GoogleColour.Name = "GoogleColour";
+            this.GoogleColour.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.GoogleColour.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // btSave
             // 
@@ -137,7 +138,7 @@
         private System.Windows.Forms.Button btSave;
         private System.Windows.Forms.Button btCancel;
         private System.Windows.Forms.TextBox txtInfo;
-        private Extensions.DataGridViewColourComboBoxColumn OutlookColour;
-        private System.Windows.Forms.DataGridViewComboBoxColumn GoogleColour;
+        private Extensions.DataGridViewOutlookColourComboBoxColumn OutlookColour;
+        private Extensions.DataGridViewGoogleColourComboBoxColumn GoogleColour;
     }
 }

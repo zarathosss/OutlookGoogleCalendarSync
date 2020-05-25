@@ -9,14 +9,14 @@ namespace OutlookGoogleCalendarSync.Forms {
     public partial class ColourMap : Form {
 
         private static readonly ILog log = LogManager.GetLogger(typeof(ColourMap));
-        public static Extensions.ColourPicker OutlookComboBox = new Extensions.ColourPicker();
-        public static Extensions.ColourPicker GoogleComboBox = new Extensions.ColourPicker();
+        public static Extensions.OutlookColourPicker OutlookComboBox = new Extensions.OutlookColourPicker();
+        public static Extensions.GoogleColourPicker GoogleComboBox = new Extensions.GoogleColourPicker();
         
         public ColourMap() {
-            OutlookComboBox = new Extensions.ColourPicker();
+            OutlookComboBox = new Extensions.OutlookColourPicker();
             OutlookComboBox.AddCategoryColours();
-            GoogleComboBox = new Extensions.ColourPicker();
-            GoogleComboBox.AddCategoryColours();
+            GoogleComboBox = new Extensions.GoogleColourPicker();
+            GoogleComboBox.AddPaletteColours();
 
             InitializeComponent();
             initialiseDataGridView();
@@ -26,27 +26,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         private void initialiseDataGridView() {
             try {
                 log.Info("Opening colour mapping window.");
-        
-                int googleCol = 1;
-
-                log.Fine("Building Outlook category colour dropdowns.");
-                Dictionary<String, OlCategoryColor> cbItems = new Dictionary<String, OlCategoryColor>();
-                OutlookOgcs.Calendar.Categories.DropdownItems().ForEach(cat => cbItems.Add(cat.Text, cat.OutlookCategory));
-
-                //Replace existing Google column with custom dropdown
-                GoogleComboBox.AddCategoryColours();
-                //GoogleOgcs.Calendar.Instance.ColourPalette.Get();
-
-                //DataGridViewComboBoxColumn col = colourGridView.Columns[googleCol] as DataGridViewComboBoxColumn;
-                //col.DataSource = new BindingSource(cbItems, null);
-                //col.DisplayMember = "Key";
-                //col.ValueMember = "Key";
-                //col.DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
-
-                //colourGridView.Columns.RemoveAt(googleCol);
-                //colourGridView.Columns.Add(col);
-
-
+                
                 //loadConfig();
 
             } catch (System.Exception ex) {
@@ -155,10 +135,17 @@ namespace OutlookGoogleCalendarSync.Forms {
                 if (e.Control is ComboBox) {
                     ComboBox cb = e.Control as ComboBox;
                     cb.DrawMode = DrawMode.OwnerDrawFixed;
-                    cb.DrawItem -= OutlookComboBox.ColourPicker_DrawItem;
-                    cb.DrawItem += OutlookComboBox.ColourPicker_DrawItem;
                     cb.SelectedIndexChanged -= colourGridView_SelectedIndexChanged;
                     cb.SelectedIndexChanged += colourGridView_SelectedIndexChanged;
+                    if (cb is Extensions.OutlookColourCombobox) {
+                        cb.DrawItem -= OutlookComboBox.ColourPicker_DrawItem;
+                        cb.DrawItem += OutlookComboBox.ColourPicker_DrawItem;
+                        OutlookComboBox.ColourPicker_DrawItem(sender, null);
+                    } else if (cb is Extensions.GoogleColourCombobox) {
+                        cb.DrawItem -= GoogleComboBox.ColourPicker_DrawItem;
+                        cb.DrawItem += GoogleComboBox.ColourPicker_DrawItem;
+                        GoogleComboBox.ColourPicker_DrawItem(sender, null);
+                    }
                 }
             } catch (System.Exception ex) {
                 OGCSexception.Analyse(ex);

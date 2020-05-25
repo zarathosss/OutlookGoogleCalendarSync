@@ -887,7 +887,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
 
                 } else {
                     if (!Settings.Instance.CreatedItemsOnly || (Settings.Instance.CreatedItemsOnly && oColour == null)) {
-                        OlCategoryColor outlookColour = OutlookOgcs.CategoryMap.Colours.Where(c => c.Key.ToString() == Settings.Instance.SetEntriesColourValue).FirstOrDefault().Key;
+                        OlCategoryColor outlookColour = OutlookOgcs.Categories.Map.Colours.Where(c => c.Key.ToString() == Settings.Instance.SetEntriesColourValue).FirstOrDefault().Key;
                         return Categories.FindName(outlookColour, Settings.Instance.SetEntriesColourName);
                     } else return oColour;
                 }
@@ -897,8 +897,8 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             }
         }
         private String getGoogleCategoryColour(String gColourId) {
-            GoogleOgcs.Palette pallete = GoogleOgcs.Calendar.Instance.ColourPalette.GetColour(gColourId);
-            OlCategoryColor outlookColour = CategoryMap.GetClosestCategory(pallete);
+            GoogleOgcs.EventColour.Palette pallete = GoogleOgcs.Calendar.Instance.ColourPalette.GetColour(gColourId);
+            OlCategoryColor outlookColour = Categories.Map.GetClosestCategory(pallete);
             return Categories.FindName(outlookColour);
         }
 

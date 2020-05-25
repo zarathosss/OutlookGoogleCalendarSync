@@ -7,28 +7,46 @@ using System.Linq;
 
 
 namespace OutlookGoogleCalendarSync.GoogleOgcs {
-    public class Palette {
-        public String Id { get; }
-        public String HexValue { get; }
-        public Color RgbValue { get; }
-
-        public static Palette NullPalette = new Palette(null, null, System.Drawing.Color.Transparent);
-
-        public Palette(String id, String hexValue, Color rgbValue) {
-            this.Id = id;
-            this.HexValue = hexValue;
-            this.RgbValue = rgbValue;
-        }
-
-        public override String ToString() {
-            return "ID: " + Id + "; HexValue: " + HexValue + "; RgbValue: " + RgbValue;
-        }
-    }
-
-
     public class EventColour {
+        public class Palette {
+            public String Id { get; }
+            public String HexValue { get; }
+            public Color RgbValue { get; }
+
+            public static Palette NullPalette = new Palette(null, null, System.Drawing.Color.Transparent);
+
+            public Palette(String id, String hexValue, Color rgbValue) {
+                this.Id = id;
+                this.HexValue = hexValue;
+                this.RgbValue = rgbValue;
+            }
+
+            public override String ToString() {
+                return "ID: " + Id + "; HexValue: " + HexValue + "; RgbValue: " + RgbValue;
+            }
+        }
+
         private static readonly ILog log = LogManager.GetLogger(typeof(EventColour));
-        private List<Palette> colourPalette;
+        private List<Palette> calendarPalette;
+        private List<Palette> eventPalette;
+        /// <summary>
+        /// All event colours, including currently used calendar "custom" colour
+        /// </summary>
+        public List<Palette> ActivePalette {
+            get {
+                List<Palette> activePalette = eventPalette;
+                //Palette currentCal = calendarPalette.Find(p => p.Id == Settings.Instance.UseGoogleCalendar.ColourId);
+                Palette currentCal = null;
+                foreach (Palette cal in calendarPalette) {
+                    if (cal.Id == Settings.Instance.UseGoogleCalendar.ColourId) {
+                        currentCal = cal;
+                        break;
+                    }
+                }
+                activePalette.Add(new Palette("Custom", currentCal.HexValue, currentCal.RgbValue));
+                return activePalette;
+            }
+        }
 
         public EventColour() { }
 
@@ -38,11 +56,10 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         public void Get() {
             log.Debug("Retrieving calendar Event colours.");
             Colors colours = null;
-            CalendarListEntry calendarColour = null;
-            colourPalette = new List<Palette>();
+            calendarPalette = new List<Palette>();
+            eventPalette = new List<Palette>();
             try {
                 colours = GoogleOgcs.Calendar.Instance.Service.Colors.Get().Execute();
-                calendarColour = GoogleOgcs.Calendar.Instance.Service.CalendarList.Get(Settings.Instance.UseGoogleCalendar.Id).Execute();
             } catch (System.Exception ex) {
                 log.Error("Failed retrieving calendar Event colours.");
                 OGCSexception.Analyse(ex);
@@ -50,13 +67,14 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
 
             if (colours == null) log.Warn("No colours found!");
-            else log.Debug(colours.Event__.Count() + " colours found.");
+            else log.Debug(colours.Event__.Count() + " event colours and "+ colours.Calendar.Count() +" calendars (with a colour) found.");
             
             foreach (KeyValuePair<String, ColorDefinition> colour in colours.Event__) {
-                colourPalette.Add(new Palette(colour.Key, colour.Value.Background, OutlookOgcs.CategoryMap.RgbColour(colour.Value.Background)));
+                eventPalette.Add(new Palette(colour.Key, colour.Value.Background, OutlookOgcs.Categories.Map.RgbColour(colour.Value.Background)));
             }
-            if (calendarColour != null && calendarColour.BackgroundColor != null) 
-                colourPalette.Add(new Palette("Custom", calendarColour.BackgroundColor, OutlookOgcs.CategoryMap.RgbColour(calendarColour.BackgroundColor)));
+            foreach (KeyValuePair<String, ColorDefinition> colour in colours.Calendar) {
+                calendarPalette.Add(new Palette(colour.Key, colour.Value.Background, OutlookOgcs.Categories.Map.RgbColour(colour.Value.Background)));
+            }
         }
 
         /// <summary>
@@ -64,7 +82,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// </summary>
         /// <param name="colourId">Google ID</param>
         public Palette GetColour(String colourId) {
-            Palette gColour = this.colourPalette.Where(x => x.Id == colourId).FirstOrDefault();
+            Palette gColour = this.ActivePalette.Where(x => x.Id == colourId).FirstOrDefault();
             if (gColour != null)
                 return gColour;
             else
@@ -77,7 +95,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// <param name="colour">The colour to search with.</param>
         public Palette GetClosestColour(Color baseColour) {
             try {
-                var colourDistance = colourPalette.Select(x => new { Value = x, Diff = GetDiff(x.RgbValue, baseColour) }).ToList();
+                var colourDistance = ActivePalette.Select(x => new { Value = x, Diff = GetDiff(x.RgbValue, baseColour) }).ToList();
                 var minDistance = colourDistance.Min(x => x.Diff);
                 return colourDistance.Find(x => x.Diff == minDistance).Value;
             } catch (System.Exception ex) {

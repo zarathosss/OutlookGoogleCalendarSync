@@ -633,8 +633,8 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         public void RefreshCategories() {
             log.Debug("Refreshing categories...");
             OutlookOgcs.Calendar.Categories.Get(oApp, useOutlookCalendar);
-            Forms.Main.Instance.ddCategoryColour.AddColourItems(null);
-            foreach (Extensions.ColourPicker.ColourInfo cInfo in Forms.Main.Instance.ddCategoryColour.Items) {
+            Forms.Main.Instance.ddCategoryColour.AddColourItems();
+            foreach (OutlookOgcs.Categories.ColourInfo cInfo in Forms.Main.Instance.ddCategoryColour.Items) {
                 if (cInfo.OutlookCategory.ToString() == Settings.Instance.SetEntriesColourValue &&
                     cInfo.Text == Settings.Instance.SetEntriesColourName) {
                     Forms.Main.Instance.ddCategoryColour.SelectedItem = cInfo;

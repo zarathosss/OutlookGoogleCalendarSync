@@ -110,7 +110,7 @@
             this.pbExpandHow = new System.Windows.Forms.PictureBox();
             this.gbSyncOptions_How = new System.Windows.Forms.GroupBox();
             this.howMorePanel = new System.Windows.Forms.Panel();
-            this.ddCategoryColour = new OutlookGoogleCalendarSync.Extensions.ColourPicker();
+            this.ddCategoryColour = new OutlookGoogleCalendarSync.Extensions.OutlookColourPicker();
             this.cbColour = new System.Windows.Forms.CheckBox();
             this.tbTargetCalendar = new System.Windows.Forms.DomainUpDown();
             this.tbCreatedItemsOnly = new System.Windows.Forms.DomainUpDown();
@@ -3286,7 +3286,7 @@
         private System.Windows.Forms.PictureBox pbExpandWhen;
         private System.Windows.Forms.Button btCloseRegexRules;
         private System.Windows.Forms.CheckBox cbAddColours;
-        public Extensions.ColourPicker ddCategoryColour;
+        public Extensions.OutlookColourPicker ddCategoryColour;
         private System.Windows.Forms.Label lDonateTip;
         private System.Windows.Forms.CheckBox cbLocation;
         private System.Windows.Forms.Label label7;

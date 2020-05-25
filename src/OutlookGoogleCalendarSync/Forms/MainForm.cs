@@ -325,8 +325,8 @@ namespace OutlookGoogleCalendarSync.Forms {
             cbPrivate.Checked = Settings.Instance.SetEntriesPrivate;
             cbAvailable.Checked = Settings.Instance.SetEntriesAvailable;
             cbColour.Checked = Settings.Instance.SetEntriesColour;
-            ddCategoryColour.AddColourItems(null);
-            foreach (Extensions.ColourPicker.ColourInfo cInfo in ddCategoryColour.Items) {
+            ddCategoryColour.AddColourItems();
+            foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddCategoryColour.Items) {
                 if (cInfo.OutlookCategory.ToString() == Settings.Instance.SetEntriesColourValue &&
                     cInfo.Text == Settings.Instance.SetEntriesColourName) {
                     ddCategoryColour.SelectedItem = cInfo;

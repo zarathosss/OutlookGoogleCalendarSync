@@ -15,6 +15,17 @@ namespace OutlookGoogleCalendarSync {
         public string Id { get; internal set; }
         [DataMember]
         private string AccessRole { get; set; }
+        private string colourId;
+        [DataMember]
+        public string ColourId {
+            get {
+                if (colourId == null) {
+                    System.Collections.Generic.List<GoogleCalendarListEntry> cals = GoogleOgcs.Calendar.Instance.GetCalendars();
+                    colourId = cals.Find(cal => cal.Id == Settings.Instance.UseGoogleCalendar.Id).ColourId;
+                }
+                return colourId;
+            }
+        }
 
         private bool primary { get; set; }
 
@@ -33,6 +44,7 @@ namespace OutlookGoogleCalendarSync {
             Id = init.Id;
             Name = init.SummaryOverride ?? init.Summary;
             primary = init.Primary ?? false;
+            colourId = init.ColorId;
         }
 
         public override string ToString() {
