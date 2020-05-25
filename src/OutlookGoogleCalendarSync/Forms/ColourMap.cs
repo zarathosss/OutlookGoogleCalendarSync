@@ -9,11 +9,15 @@ namespace OutlookGoogleCalendarSync.Forms {
     public partial class ColourMap : Form {
 
         private static readonly ILog log = LogManager.GetLogger(typeof(ColourMap));
-        private Extensions.ColourPicker outlookComboBox = new OutlookGoogleCalendarSync.Extensions.ColourPicker();
-        private Extensions.ColourPicker googleComboBox = new OutlookGoogleCalendarSync.Extensions.ColourPicker();
-        //private Extensions.DataGridViewCustomPaintComboBoxColumn foo = new Extensions.DataGridViewCustomPaintComboBoxColumn();
-
+        public static Extensions.ColourPicker OutlookComboBox = new Extensions.ColourPicker();
+        public static Extensions.ColourPicker GoogleComboBox = new Extensions.ColourPicker();
+        
         public ColourMap() {
+            OutlookComboBox = new Extensions.ColourPicker();
+            OutlookComboBox.AddCategoryColours();
+            GoogleComboBox = new Extensions.ColourPicker();
+            GoogleComboBox.AddCategoryColours();
+
             InitializeComponent();
             initialiseDataGridView();
             colourGridView.AllowUserToAddRows = true;
@@ -22,37 +26,25 @@ namespace OutlookGoogleCalendarSync.Forms {
         private void initialiseDataGridView() {
             try {
                 log.Info("Opening colour mapping window.");
-                outlookComboBox.AddCategoryColours();
-                
-                int outlookCol = 0;
+        
                 int googleCol = 1;
 
                 log.Fine("Building Outlook category colour dropdowns.");
                 Dictionary<String, OlCategoryColor> cbItems = new Dictionary<String, OlCategoryColor>();
                 OutlookOgcs.Calendar.Categories.DropdownItems().ForEach(cat => cbItems.Add(cat.Text, cat.OutlookCategory));
 
-                //Replace existing Outlook column with custom dropdown
-                DataGridViewComboBoxColumn col = colourGridView.Columns[outlookCol] as DataGridViewComboBoxColumn;
-                col.DataSource = new BindingSource(cbItems, null);
-                col.DisplayMember = "Key";
-                col.ValueMember = "Key";
-                col.DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
-                
-                colourGridView.Columns.RemoveAt(outlookCol);
-                colourGridView.Columns.Add(col);
-
                 //Replace existing Google column with custom dropdown
-                googleComboBox.AddCategoryColours();
+                GoogleComboBox.AddCategoryColours();
                 //GoogleOgcs.Calendar.Instance.ColourPalette.Get();
 
-                col = colourGridView.Columns[googleCol] as DataGridViewComboBoxColumn;
-                col.DataSource = new BindingSource(cbItems, null);
-                col.DisplayMember = "Key";
-                col.ValueMember = "Key";
-                col.DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
+                //DataGridViewComboBoxColumn col = colourGridView.Columns[googleCol] as DataGridViewComboBoxColumn;
+                //col.DataSource = new BindingSource(cbItems, null);
+                //col.DisplayMember = "Key";
+                //col.ValueMember = "Key";
+                //col.DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
 
-                colourGridView.Columns.RemoveAt(googleCol);
-                colourGridView.Columns.Add(col);
+                //colourGridView.Columns.RemoveAt(googleCol);
+                //colourGridView.Columns.Add(col);
 
 
                 //loadConfig();
@@ -163,8 +155,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 if (e.Control is ComboBox) {
                     ComboBox cb = e.Control as ComboBox;
                     cb.DrawMode = DrawMode.OwnerDrawFixed;
-                    cb.DrawItem -= this.outlookComboBox.ColourPicker_DrawItem;
-                    cb.DrawItem += this.outlookComboBox.ColourPicker_DrawItem;
+                    cb.DrawItem -= OutlookComboBox.ColourPicker_DrawItem;
+                    cb.DrawItem += OutlookComboBox.ColourPicker_DrawItem;
                     cb.SelectedIndexChanged -= colourGridView_SelectedIndexChanged;
                     cb.SelectedIndexChanged += colourGridView_SelectedIndexChanged;
                 }
@@ -205,8 +197,6 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void colourGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e) {
             log.Debug("colourGridView_CellValueChanged");
-
-
         }
 
         private void colourGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {

@@ -124,9 +124,11 @@
     <value>True</value>
   </metadata>
   <data name="txtInfo.Text" xml:space="preserve">
-    <value>Sometimes, for Outlook recurring meeting invites from an organiser in a different timezone, a little manual help is needed matching their timezone to the correct one on your computer.
+    <value>Create your own mapping between Outlook and Google categories/colours by selecting appropriate pairings below.
 
-In the first column below are listed such timezone(s) - simply select the equivalent system timezone from the dropdown on the right and click Save.</value>
+ If no maps are specified, colours will be matched to the closest equivalent colour available, which can cause problems.
+* G-&gt;O: New Outlook categories will be created (eg "OGCS Green") instead of mapping to any existing category(ies) of that colour.
+* G&lt;-&gt;O: Can result in colours not matching back to their original</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

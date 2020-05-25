@@ -103,7 +103,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                     items.Add(new Extensions.ColourPicker.ColourInfo(category.Color, CategoryMap.RgbColour(category.Color), category.Name));
                 }
             }
-            return items;
+            return items.OrderBy(i => i.Text).ToList();
         }
 
         /// <summary>
