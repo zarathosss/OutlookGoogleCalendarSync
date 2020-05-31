@@ -13,81 +13,66 @@ namespace OutlookGoogleCalendarSync.Forms {
         public static Extensions.GoogleColourPicker GoogleComboBox = new Extensions.GoogleColourPicker();
         
         public ColourMap() {
+            OutlookComboBox = null;
             OutlookComboBox = new Extensions.OutlookColourPicker();
             OutlookComboBox.AddCategoryColours();
+            GoogleComboBox = null;
             GoogleComboBox = new Extensions.GoogleColourPicker();
             GoogleComboBox.AddPaletteColours();
 
             InitializeComponent();
             initialiseDataGridView();
-            colourGridView.AllowUserToAddRows = true;
         }
 
         private void initialiseDataGridView() {
             try {
                 log.Info("Opening colour mapping window.");
-                
-                //loadConfig();
-
+                loadConfig();
             } catch (System.Exception ex) {
                 OGCSexception.Analyse(ex);
             }
         }
-        /*
+        
         private void loadConfig() {
             try {
-                colourGridView.AllowUserToAddRows = true;
-                if (Settings.Instance.TimezoneMaps.Count > 0) colourGridView.Rows.Clear();
-                foreach (KeyValuePair<String, String> tzMap in Settings.Instance.TimezoneMaps) {
-                    addRow(tzMap.Key, tzMap.Value);
+                if (Settings.Instance.ColourMaps.Count > 0) colourGridView.Rows.Clear();
+                foreach (KeyValuePair<String, String> colourMap in Settings.Instance.ColourMaps) {
+                    addRow(colourMap.Key, GoogleOgcs.EventColour.Palette.GetColourName(colourMap.Value));
                 }
-
             } catch (System.Exception ex) {
                 OGCSexception.Analyse("Populating gridview cells from Settings.", ex);
             }
         }
 
-        private void addRow(String organiserTz, String systemTz) {
+        private void addRow(String outlookColour, String googleColour) {
             int lastRow = 0;
             try {
                 lastRow = colourGridView.Rows.GetLastRow(DataGridViewElementStates.None);
-                Object currentValue = colourGridView.Rows[lastRow].Cells["OrganiserTz"].Value;
+                Object currentValue = colourGridView.Rows[lastRow].Cells["OutlookColour"].Value;
                 if (currentValue != null && currentValue.ToString() != "") {
                     lastRow++;
                     colourGridView.Rows.Insert(lastRow);
                 }
-                colourGridView.Rows[lastRow].Cells["OrganiserTz"].Value = organiserTz;
-                colourGridView.Rows[lastRow].Cells["SystemTz"].Value = systemTz;
+                colourGridView.Rows[lastRow].Cells["OutlookColour"].Value = outlookColour;
+                colourGridView.Rows[lastRow].Cells["GoogleColour"].Value = googleColour;
 
                 colourGridView.CurrentCell = colourGridView.Rows[lastRow].Cells[1];
                 colourGridView.NotifyCurrentCellDirty(true);
                 colourGridView.NotifyCurrentCellDirty(false);
 
             } catch (System.Exception ex) {
-                OGCSexception.Analyse("Adding timezone map row #" + lastRow, ex);
+                OGCSexception.Analyse("Adding colour/category map row #" + lastRow, ex);
             }
         }
-        */
-        public static TimeZoneInfo GetSystemTimezone(String organiserTz, System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> sysTZ) {
-            TimeZoneInfo tzi = null;
-            /*if (Settings.Instance.TimezoneMaps.ContainsKey(organiserTz)) {
-                tzi = sysTZ.FirstOrDefault(t => t.Id == Settings.Instance.TimezoneMaps[organiserTz]);
-                if (tzi != null) {
-                    log.Debug("Using custom timezone mapping ID '" + tzi.Id + "' for '" + organiserTz + "'");
-                    return tzi;
-                } else log.Warn("Failed to convert custom timezone mapping to any available system timezone.");
-            }*/
-            return tzi;            
-        }
-
+        
         #region EVENTS
         private void btSave_Click(object sender, EventArgs e) {
-            /*try {
-                Settings.Instance.TimezoneMaps.Clear();
+            try {
+                Settings.Instance.ColourMaps.Clear();
                 foreach (DataGridViewRow row in colourGridView.Rows) {
                     if (row.Cells[0].Value == null || row.Cells[0].Value.ToString().Trim() == "") continue;
                     try {
-                        Settings.Instance.TimezoneMaps.Add(row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString());
+                        Settings.Instance.ColourMaps.Add(row.Cells[0].Value.ToString(), GoogleOgcs.EventColour.Palette.GetColourId(row.Cells[1].Value.ToString()));                        
                     } catch (System.ArgumentException ex) {
                         if (OGCSexception.GetErrorCode(ex) == "0x80070057") {
                             //An item with the same key has already been added
@@ -95,10 +80,10 @@ namespace OutlookGoogleCalendarSync.Forms {
                     }
                 }
             } catch (System.Exception ex) {
-                OGCSexception.Analyse("Could not save timezone mappings to Settings.", ex);
+                OGCSexception.Analyse("Could not save colour/category mappings to Settings.", ex);
             } finally {
                 this.Close();
-            }*/
+            }
         }
 
         private void colourGridView_DataError(object sender, DataGridViewDataErrorEventArgs e) {
@@ -160,7 +145,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void colourGridView_CurrentCellDirtyStateChanged(object sender, EventArgs e) {
-            log.Debug("colourGridView_CurrentCellDirtyStateChanged");
+            //log.Debug("colourGridView_CurrentCellDirtyStateChanged");
             //colourGridView.CurrentCell.Style.BackColor = System.Drawing.Color.Blue;
             DataGridViewColumn col = colourGridView.Columns[colourGridView.CurrentCell.ColumnIndex];
             //if (col is DataGridViewComboBoxColumn) {
@@ -172,26 +157,51 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
 
         private void colourGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e) {
-            log.Debug("CellEndEdit");
-            //colourGridView.CurrentCell.Style.BackColor = System.Drawing.Color.Blue;
+            newRowNeeded();
+        }
+
+        private void newRowNeeded() {
+            int lastRow = 0;
+            try {
+                lastRow = colourGridView.Rows.GetLastRow(DataGridViewElementStates.None);
+                Object currentOValue = colourGridView.Rows[lastRow].Cells["OutlookColour"].Value;
+                Object currentGValue = colourGridView.Rows[lastRow].Cells["GoogleColour"].Value;
+                if (currentOValue != null && currentOValue.ToString() != "" &&
+                    currentGValue != null && currentGValue.ToString() != "")
+                {
+                    lastRow++;
+                    DataGridViewCell lastCell = colourGridView.Rows[lastRow - 1].Cells[1];
+                    if (lastCell != colourGridView.CurrentCell)
+                        colourGridView.CurrentCell = lastCell;
+                    colourGridView.NotifyCurrentCellDirty(true);
+                    colourGridView.NotifyCurrentCellDirty(false);
+                }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("Adding colour/category map row #" + lastRow, ex);
+            }            
         }
 
         private void colourGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e) {
-            log.Debug("CellFormatting");
-            //colourGridView.CurrentCell
+            //log.Debug("CellFormatting");
             
         }
 
         private void colourGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e) {
-            log.Debug("colourGridView_CellValueChanged");
+            //log.Debug("colourGridView_CellValueChanged");
         }
 
         private void colourGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e) {
-            log.Debug("colourGridView_CellPainting "+ e.RowIndex +":"+ e.ColumnIndex);
+            //log.Debug("colourGridView_CellPainting "+ e.RowIndex +":"+ e.ColumnIndex);
             //e.PaintBackground(e.ClipBounds, true);
             //e.PaintContent(e.ClipBounds);
             //e.CellStyle.BackColor = System.Drawing.Color.Red;
             //e.Handled = true;
+        }
+        
+        private void colourGridView_CellEnter(object sender, DataGridViewCellEventArgs e) {
+            if (colourGridView.CurrentRow.Index + 1 < colourGridView.Rows.Count) return;
+
+            newRowNeeded();
         }
     }
 }

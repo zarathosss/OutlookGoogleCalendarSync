@@ -125,6 +125,7 @@ namespace OutlookGoogleCalendarSync {
             SetEntriesColour = false;
             SetEntriesColourValue = Microsoft.Office.Interop.Outlook.OlCategoryColor.olCategoryColorNone.ToString();
             SetEntriesColourName = "None";
+            ColourMaps = new ColourMappingDictionary();
             Obfuscation = new Obfuscate();
 
             MuteClickSounds = false;
@@ -281,6 +282,15 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool SetEntriesColour { get; set; }
         [DataMember] public String SetEntriesColourValue { get; set; }
         [DataMember] public String SetEntriesColourName { get; set; }
+        [DataMember]
+        public ColourMappingDictionary ColourMaps { get; private set; }
+        [CollectionDataContract(
+            ItemName = "ColourMap",
+            KeyName = "OutlookCategoryName",
+            ValueName = "GoogleColourId",
+            Namespace = "http://schemas.datacontract.org/2004/07/OutlookGoogleCalendarSync"
+        )]
+        public class ColourMappingDictionary : Dictionary<String, String> { }
         
         //Obfuscation
         [DataMember] public Obfuscate Obfuscation { get; set; }
@@ -487,6 +497,11 @@ namespace OutlookGoogleCalendarSync {
             if ((SetEntriesPrivate || SetEntriesAvailable || SetEntriesColour) && SyncDirection == Sync.Direction.Bidirectional) {
                 log.Info("    TargetCalendar: " + TargetCalendar.Name);
                 log.Info("    CreatedItemsOnly: " + CreatedItemsOnly);
+            }
+            if (ColourMaps.Count > 0) {
+                log.Info("  Custom Colour/Category Mapping:-");
+                ColourMaps.ToList().ForEach(c => log.Info("    " + OutlookOgcs.Calendar.Categories.OutlookColour(c.Key) + ":"+ c.Key + " <=> " + 
+                    c.Value + ":" + GoogleOgcs.EventColour.Palette.GetColourName(c.Value)));
             }
             log.Info("  Obfuscate Words: " + Obfuscation.Enabled);
             if (Obfuscation.Enabled) {

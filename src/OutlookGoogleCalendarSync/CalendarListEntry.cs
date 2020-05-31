@@ -25,6 +25,7 @@ namespace OutlookGoogleCalendarSync {
                 }
                 return colourId;
             }
+            internal set { colourId = value; }
         }
 
         private bool primary { get; set; }

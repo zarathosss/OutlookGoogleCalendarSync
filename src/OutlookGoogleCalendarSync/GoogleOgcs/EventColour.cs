@@ -12,6 +12,17 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             public String Id { get; }
             public String HexValue { get; }
             public Color RgbValue { get; }
+            public String Name { get {
+                    String name = "";
+                    try {
+                        name = names[Id];
+                    } catch (System.Exception ex) {
+                        OGCSexception.Analyse(ex);
+                        name = HexValue;
+                    }
+                    return name;
+                }
+            }
 
             public static Palette NullPalette = new Palette(null, null, System.Drawing.Color.Transparent);
 
@@ -22,7 +33,42 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
 
             public override String ToString() {
-                return "ID: " + Id + "; HexValue: " + HexValue + "; RgbValue: " + RgbValue;
+                return "ID: " + Id + "; HexValue: " + HexValue + "; RgbValue: " + RgbValue +"; Name: "+ Name;
+            }
+
+            private static Dictionary<String,String> names = new Dictionary<String, String> {
+                {"1", "Tomato"},
+                { "2", "Flamingo" },
+                { "3", "Tangerine" },
+                { "4", "Banana" },
+                { "5", "Sage" },
+                { "6", "Peacock" },
+                { "7", "Blueberry" },
+                { "8", "Lavendar" },
+                { "9", "Grape" },
+                { "10", "Graphite" },
+                { "11", "Basil" },
+                { "Custom", "Calendar Default" }
+            };
+
+            public static String GetColourId(String name) {
+                String id = null;
+                try {
+                    id = names.First(n => n.Value == name).Key;
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse("Could not find colour ID for '" + name + "'.", ex);
+                }
+                return id;
+            }
+
+            public static String GetColourName(String id) {
+                String name = null;
+                try {
+                    name = names[id];
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse("Could not find colour name for '" + id + "'.", ex);
+                }
+                return name;
             }
         }
 
@@ -34,7 +80,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         /// </summary>
         public List<Palette> ActivePalette {
             get {
-                List<Palette> activePalette = eventPalette;
+                List<Palette> activePalette = new List<Palette>();
+
                 //Palette currentCal = calendarPalette.Find(p => p.Id == Settings.Instance.UseGoogleCalendar.ColourId);
                 Palette currentCal = null;
                 foreach (Palette cal in calendarPalette) {
@@ -44,6 +91,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                     }
                 }
                 activePalette.Add(new Palette("Custom", currentCal.HexValue, currentCal.RgbValue));
+
+                activePalette.AddRange(eventPalette);
                 return activePalette;
             }
         }

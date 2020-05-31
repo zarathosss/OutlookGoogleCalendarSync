@@ -76,7 +76,7 @@ namespace OutlookGoogleCalendarSync.Extensions {
 
             // Get the colour
             GoogleOgcs.EventColour.Palette colour = (GoogleOgcs.EventColour.Palette)Items[e.Index];
-            ColourCombobox.DrawComboboxItemColour(cbColour, new SolidBrush(colour.RgbValue), colour.HexValue, e);
+            ColourCombobox.DrawComboboxItemColour(cbColour, new SolidBrush(colour.RgbValue), colour.Name, e);
         }
 
         public new GoogleOgcs.EventColour.Palette SelectedItem {
@@ -133,13 +133,16 @@ namespace OutlookGoogleCalendarSync.Extensions {
             OutlookColourCombobox ctl = DataGridView.EditingControl as OutlookColourCombobox;
             if (this.RowIndex >= 0) {
                 if (this.Value == null)
-                    ctl.SelectedItem = (OutlookOgcs.Categories.ColourInfo)this.DefaultNewRowValue;
+                    ctl.SelectedIndex = 0;
                 else {
-                    String currentText = this.Value.ToString();
-                    if (ctl.Items.Count == 0) {
+                    String currentText = null;
+                    if (ctl.Items.Count == 0)
                         ctl.PopulateDropdownItems();
-                    }
-                    this.Value = currentText;
+                    else
+                        currentText = this.Value.ToString();
+					
+                    if (!string.IsNullOrEmpty(currentText)) this.Value = currentText;
+					
                     foreach (OutlookOgcs.Categories.ColourInfo ci in Forms.ColourMap.OutlookComboBox.Items) {
                         if (ci.Text == (String)this.Value) {
                             ctl.SelectedValue = ci;
@@ -164,28 +167,33 @@ namespace OutlookGoogleCalendarSync.Extensions {
 
         public override object DefaultNewRowValue {
             get {
-                if (Forms.ColourMap.OutlookComboBox.Items.Count > 0)
-                    return (Forms.ColourMap.OutlookComboBox.Items[1] as OutlookOgcs.Categories.ColourInfo).Text;
-                else
-                    return String.Empty;
+                return String.Empty;
+
+                //if (Forms.ColourMap.OutlookComboBox.Items.Count > 0)
+                //    return (Forms.ColourMap.OutlookComboBox.Items[0] as OutlookOgcs.Categories.ColourInfo).Text;
+                //else
+                //    return String.Empty;
             }
         }
 
         protected override void Paint(System.Drawing.Graphics graphics, System.Drawing.Rectangle clipBounds, System.Drawing.Rectangle cellBounds, int rowIndex, System.Windows.Forms.DataGridViewElementStates elementState, object value, object formattedValue, string errorText, System.Windows.Forms.DataGridViewCellStyle cellStyle, System.Windows.Forms.DataGridViewAdvancedBorderStyle advancedBorderStyle, System.Windows.Forms.DataGridViewPaintParts paintParts) {
             //Paint inactive cells
-            //base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
+            base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, "", "", errorText, cellStyle, advancedBorderStyle, paintParts);
 
-            int indexItem = rowIndex;
-            if (indexItem < 0)
-                return;
+            try {
+                if (rowIndex < 0)
+                    return;
 
-            foreach (OutlookOgcs.Categories.ColourInfo ci in Forms.ColourMap.OutlookComboBox.Items) {
-                if (ci.Text == this.Value.ToString()) {
-                    Brush boxBrush = new SolidBrush(ci.Colour);
-                    Brush textBrush = SystemBrushes.WindowText;
-                    Extensions.ColourCombobox.DrawComboboxItemColour(true, boxBrush, textBrush, this.Value.ToString(), graphics, cellBounds);
-                    break;
+                foreach (OutlookOgcs.Categories.ColourInfo ci in Forms.ColourMap.OutlookComboBox.Items) {
+                    if (ci.Text == this.Value.ToString()) {
+                        Brush boxBrush = new SolidBrush(ci.Colour);
+                        Brush textBrush = SystemBrushes.WindowText;
+                        Extensions.ColourCombobox.DrawComboboxItemColour(true, boxBrush, textBrush, this.Value.ToString(), graphics, cellBounds);
+                        break;
+                    }
                 }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("OutlookColourComboboxCell.Paint()", ex);
             }
         }
     }
@@ -198,16 +206,19 @@ namespace OutlookGoogleCalendarSync.Extensions {
             GoogleColourCombobox ctl = DataGridView.EditingControl as GoogleColourCombobox;
             if (this.RowIndex >= 0) {
                 if (this.Value == null)
-                    ctl.SelectedItem = (GoogleOgcs.EventColour.Palette)this.DefaultNewRowValue;
+                    ctl.SelectedIndex = 0;
                 else {
-                    String currentText = this.Value.ToString();
-                    if (ctl.Items.Count == 0) {
+                    String currentText = null;
+                    if (ctl.Items.Count == 0) 
                         ctl.PopulateDropdownItems();
-                    }
-                    this.Value = currentText;
-                    foreach (GoogleOgcs.EventColour.Palette ci in Forms.ColourMap.GoogleComboBox.Items) {
-                        if (ci.HexValue == (String)this.Value) {
-                            ctl.SelectedValue = ci;
+                     else
+                        currentText = this.Value.ToString();
+
+                    if (!string.IsNullOrEmpty(currentText)) this.Value = currentText;
+
+                    foreach (GoogleOgcs.EventColour.Palette p in Forms.ColourMap.GoogleComboBox.Items) {
+                        if (p.Name == (String)this.Value) {
+                            ctl.SelectedValue = p;
                             break;
                         }
                     }
@@ -229,27 +240,34 @@ namespace OutlookGoogleCalendarSync.Extensions {
 
         public override object DefaultNewRowValue {
             get {
-                if (Forms.ColourMap.GoogleComboBox.Items.Count > 0)
-                    return (Forms.ColourMap.GoogleComboBox.Items[1] as GoogleOgcs.EventColour.Palette).HexValue;
-                else
-                    return String.Empty;
+                return String.Empty;
+
+                //int itemCount = Forms.ColourMap.GoogleComboBox.Items.Count;
+                //if (itemCount > 0)
+                //    return (Forms.ColourMap.GoogleComboBox.Items[itemCount - 1] as GoogleOgcs.EventColour.Palette).Name;
+                //else
+                //    return String.Empty;
             }
         }
 
         protected override void Paint(System.Drawing.Graphics graphics, System.Drawing.Rectangle clipBounds, System.Drawing.Rectangle cellBounds, int rowIndex, System.Windows.Forms.DataGridViewElementStates elementState, object value, object formattedValue, string errorText, System.Windows.Forms.DataGridViewCellStyle cellStyle, System.Windows.Forms.DataGridViewAdvancedBorderStyle advancedBorderStyle, System.Windows.Forms.DataGridViewPaintParts paintParts) {
             //Paint inactive cells
-            //base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
-            
-            if (rowIndex < 0)
-                return;
+            base.Paint(graphics, clipBounds, cellBounds, rowIndex, elementState, "", "", errorText, cellStyle, advancedBorderStyle, paintParts);
 
-            foreach (GoogleOgcs.EventColour.Palette ci in Forms.ColourMap.GoogleComboBox.Items) {
-                if (ci.HexValue == this.Value.ToString()) {
-                    Brush boxBrush = new SolidBrush(ci.RgbValue);
-                    Brush textBrush = SystemBrushes.WindowText;
-                    Extensions.ColourCombobox.DrawComboboxItemColour(true, boxBrush, textBrush, this.Value.ToString(), graphics, cellBounds);
-                    break;
+            try {
+                if (rowIndex < 0)
+                    return;
+
+                foreach (GoogleOgcs.EventColour.Palette ci in Forms.ColourMap.GoogleComboBox.Items) {
+                    if (ci.Name == this.Value.ToString()) {
+                        Brush boxBrush = new SolidBrush(ci.RgbValue);
+                        Brush textBrush = SystemBrushes.WindowText;
+                        Extensions.ColourCombobox.DrawComboboxItemColour(true, boxBrush, textBrush, this.Value.ToString(), graphics, cellBounds);
+                        break;
+                    }
                 }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("GoogleColourComboboxCell.Paint()", ex);
             }
         }
     }
@@ -324,6 +342,14 @@ namespace OutlookGoogleCalendarSync.Extensions {
                 case Keys.PageDown:
                 case Keys.PageUp:
                     return true;
+                case Keys.Delete: {
+                        DataGridViewSelectedRowCollection selectedRows = dataGridView.SelectedRows;
+                        if (selectedRows.Count > 0) {
+                            DataGridViewRow selectedRow = selectedRows[selectedRows.Count - 1];
+                            dataGridView.Rows.RemoveAt(selectedRow.HeaderCell.RowIndex);
+                        }
+                        return true;
+                    }
                 default:
                     return !dataGridViewWantsInputKey;
             }
@@ -446,7 +472,7 @@ namespace OutlookGoogleCalendarSync.Extensions {
         public void PopulateDropdownItems() {
             Dictionary <GoogleOgcs.EventColour.Palette, String> cbItems = new Dictionary<GoogleOgcs.EventColour.Palette, String>();
             foreach (GoogleOgcs.EventColour.Palette ci in Forms.ColourMap.GoogleComboBox.Items) {
-                cbItems.Add(ci, ci.HexValue);
+                cbItems.Add(ci, ci.Name);
             }
             this.DataSource = new BindingSource(cbItems, null);
             this.DisplayMember = "Value";
