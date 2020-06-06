@@ -67,8 +67,13 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             /// Convert from HTML hex string to Color
             /// </summary>
             public static Color RgbColour(String hexColour) {
-                Color colour = ColorTranslator.FromHtml(hexColour);
-                log.Fine("Converted " + hexColour + " to " + colour.ToString());
+                Color colour = new Color();
+                try {
+                    colour = ColorTranslator.FromHtml(hexColour);
+                    log.Fine("Converted " + hexColour + " to " + colour.ToString());
+                } catch (System.Exception ex) {
+                    OGCSexception.Analyse("Could not convert hex '" + hexColour + "' to RGB colour.", ex);
+                }
                 return colour;
             }
 
@@ -144,7 +149,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         }
 
         /// <summary>
-        /// Get the Outlook category from the name given to the category
+        /// Get the Outlook category colour from the name given to the category
         /// </summary>
         /// <param name="categoryName">The user named Outlook category</param>
         /// <returns>The Outlook category type</returns>
@@ -191,8 +196,8 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         /// <param name="olCategory">The Outlook category to search by</param>
         /// <param name="categoryName">Optional: The Outlook category name to also search by</param>
         /// <returns>The matching category name</returns>
-        public String FindName(Outlook.OlCategoryColor olCategory, String categoryName = null) {
-            if (olCategory == Outlook.OlCategoryColor.olCategoryColorNone) return "";
+        public String FindName(Outlook.OlCategoryColor? olCategory, String categoryName = null) {
+            if (olCategory == null || olCategory == Outlook.OlCategoryColor.olCategoryColorNone) return "";
 
             Outlook.Category failSafeCategory = null;
             foreach (Outlook.Category category in this.categories) {
@@ -218,7 +223,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             return newCategory.Name;
         }
 
-        public static String FriendlyCategoryName(Outlook.OlCategoryColor olCategory) {
+        public static String FriendlyCategoryName(Outlook.OlCategoryColor? olCategory) {
             return olCategory.ToString().Replace("olCategoryColor", "").Replace("Dark", "Dark ");
         }
     }

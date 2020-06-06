@@ -66,13 +66,38 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
         
         #region EVENTS
-        private void btSave_Click(object sender, EventArgs e) {
+        private void btOK_Click(object sender, EventArgs e) {
+            log.Fine("Checking no duplicate mappings exist.");
             try {
+                List<String> oColValues = new List<String>();
+                List<String> gColValues = new List<String>();
+                foreach (DataGridViewRow row in colourGridView.Rows) {
+                    oColValues.Add(row.Cells["OutlookColour"].Value.ToString());
+                    gColValues.Add(row.Cells["GoogleColour"].Value.ToString());
+                }
+                String oDuplicates = string.Join("\r\n", oColValues.GroupBy(v => v).Where(g => g.Count() > 1).Select(s => "- "+ s.Key).ToList());
+                String gDuplicates = string.Join("\r\n", gColValues.GroupBy(v => v).Where(g => g.Count() > 1).Select(s => "- " + s.Key).ToList());
+
+                if (!string.IsNullOrEmpty(oDuplicates) && (Settings.Instance.SyncDirection.Id == Sync.Direction.OutlookToGoogle.Id || Settings.Instance.SyncDirection.Id == Sync.Direction.Bidirectional.Id)) {
+                    OgcsMessageBox.Show("The following Outlook categories cannot be mapped more than once:-\r\n\r\n" + oDuplicates, "Duplicate Outlook Mappings", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    return;
+                } else if (!string.IsNullOrEmpty(gDuplicates) && (Settings.Instance.SyncDirection.Id == Sync.Direction.GoogleToOutlook.Id || Settings.Instance.SyncDirection.Id == Sync.Direction.Bidirectional.Id)) {
+                    OgcsMessageBox.Show("The following Google colours cannot be mapped more than once:-\r\n\r\n" + gDuplicates, "Duplicate Google Mappings", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    return;
+                }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("Failed looking for duplicating mappings before storing in Settings.", ex);
+                OgcsMessageBox.Show("An error was encountered storing your custom mappings.", "Cannot save mappings", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try {
+                log.Fine("Storing colour mappings in Settings.");
                 Settings.Instance.ColourMaps.Clear();
                 foreach (DataGridViewRow row in colourGridView.Rows) {
-                    if (row.Cells[0].Value == null || row.Cells[0].Value.ToString().Trim() == "") continue;
+                    if (row.Cells["OutlookColour"].Value == null || row.Cells["OutlookColour"].Value.ToString().Trim() == "") continue;
                     try {
-                        Settings.Instance.ColourMaps.Add(row.Cells[0].Value.ToString(), GoogleOgcs.EventColour.Palette.GetColourId(row.Cells[1].Value.ToString()));                        
+                        Settings.Instance.ColourMaps.Add(row.Cells["OutlookColour"].Value.ToString(), GoogleOgcs.EventColour.Palette.GetColourId(row.Cells["GoogleColour"].Value.ToString()));                        
                     } catch (System.ArgumentException ex) {
                         if (OGCSexception.GetErrorCode(ex) == "0x80070057") {
                             //An item with the same key has already been added

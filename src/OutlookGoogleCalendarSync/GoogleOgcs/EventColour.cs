@@ -9,13 +9,37 @@ using System.Linq;
 namespace OutlookGoogleCalendarSync.GoogleOgcs {
     public class EventColour {
         public class Palette {
+            private Boolean UseWebAppColours = true;
             public String Id { get; }
-            public String HexValue { get; }
-            public Color RgbValue { get; }
+
+            private String hexValue;
+            public String HexValue {
+                get {
+                    if (UseWebAppColours) {
+                        if (Id != null && names.ContainsKey(Id))
+                            return names[Id].WebAppHexValue ?? hexValue;
+                        else
+                            return hexValue;
+                    }
+                    return hexValue;
+                }
+                internal set { hexValue = value; }
+            }
+
+            private Color rgbValue;
+            public Color RgbValue {
+                get {
+                    if (UseWebAppColours)
+                        return OutlookOgcs.Categories.Map.RgbColour(HexValue);
+                    return rgbValue;
+                }
+                internal set { rgbValue = value; }
+            }
+
             public String Name { get {
                     String name = "";
                     try {
-                        name = names[Id];
+                        name = GetColourName(Id);
                     } catch (System.Exception ex) {
                         OGCSexception.Analyse(ex);
                         name = HexValue;
@@ -35,26 +59,36 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             public override String ToString() {
                 return "ID: " + Id + "; HexValue: " + HexValue + "; RgbValue: " + RgbValue +"; Name: "+ Name;
             }
+            
+            private class Metadata {
+                internal String Name { get; }
+                internal String WebAppHexValue { get; }
+                
+                internal Metadata(String name, String webAppHexValue) {
+                    Name = name;
+                    WebAppHexValue = webAppHexValue;
+                }
+            }
 
-            private static Dictionary<String,String> names = new Dictionary<String, String> {
-                {"1", "Tomato"},
-                { "2", "Flamingo" },
-                { "3", "Tangerine" },
-                { "4", "Banana" },
-                { "5", "Sage" },
-                { "6", "Peacock" },
-                { "7", "Blueberry" },
-                { "8", "Lavendar" },
-                { "9", "Grape" },
-                { "10", "Graphite" },
-                { "11", "Basil" },
-                { "Custom", "Calendar Default" }
+            private static Dictionary<String, Metadata> names = new Dictionary<String, Metadata> {
+                { "Custom", new Metadata("Calendar Default", null) },
+                { "1", new Metadata("Lavendar", "#7986CB") },
+                { "2", new Metadata("Sage", "#33B679") },
+                { "3", new Metadata("Grape", "#8E24AA") },
+                { "4", new Metadata("Flamingo", "#E67C73") },
+                { "5", new Metadata("Banana", "#F6BF26") },
+                { "6", new Metadata("Tangerine", "#F4511E") },
+                { "7", new Metadata("Peacock", "#039BE5") },
+                { "8", new Metadata("Graphite", "#616161") },
+                { "9", new Metadata("Blueberry", "#3F51B5") },
+                { "10", new Metadata("Basil", "#0B8043") },
+                { "11", new Metadata("Tomato", "#D50000") }
             };
 
             public static String GetColourId(String name) {
                 String id = null;
                 try {
-                    id = names.First(n => n.Value == name).Key;
+                    id = names.First(n => (n.Value as Metadata).Name == name).Key;
                 } catch (System.Exception ex) {
                     OGCSexception.Analyse("Could not find colour ID for '" + name + "'.", ex);
                 }
@@ -62,9 +96,14 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
 
             public static String GetColourName(String id) {
+                if (id == null) return null;
+
                 String name = null;
                 try {
-                    name = names[id];
+                    if (names.ContainsKey(id))
+                        name = (names[id] as Metadata).Name;
+                    else
+                        log.Error("GetColourName(): ID '" + id + "' not found.");
                 } catch (System.Exception ex) {
                     OGCSexception.Analyse("Could not find colour name for '" + id + "'.", ex);
                 }

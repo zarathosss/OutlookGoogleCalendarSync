@@ -41,9 +41,9 @@
             this.btSave.Name = "btSave";
             this.btSave.Size = new System.Drawing.Size(75, 23);
             this.btSave.TabIndex = 1;
-            this.btSave.Text = "Save";
+            this.btSave.Text = "OK";
             this.btSave.UseVisualStyleBackColor = false;
-            this.btSave.Click += new System.EventHandler(this.btSave_Click);
+            this.btSave.Click += new System.EventHandler(this.btOK_Click);
             // 
             // btCancel
             // 

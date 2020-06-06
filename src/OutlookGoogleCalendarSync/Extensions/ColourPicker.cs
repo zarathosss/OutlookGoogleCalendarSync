@@ -135,12 +135,9 @@ namespace OutlookGoogleCalendarSync.Extensions {
                 if (this.Value == null)
                     ctl.SelectedIndex = 0;
                 else {
-                    String currentText = null;
+                    String currentText = this.Value.ToString();
                     if (ctl.Items.Count == 0)
                         ctl.PopulateDropdownItems();
-                    else
-                        currentText = this.Value.ToString();
-					
                     if (!string.IsNullOrEmpty(currentText)) this.Value = currentText;
 					
                     foreach (OutlookOgcs.Categories.ColourInfo ci in Forms.ColourMap.OutlookComboBox.Items) {
@@ -208,12 +205,9 @@ namespace OutlookGoogleCalendarSync.Extensions {
                 if (this.Value == null)
                     ctl.SelectedIndex = 0;
                 else {
-                    String currentText = null;
+                    String currentText = this.Value.ToString();
                     if (ctl.Items.Count == 0) 
                         ctl.PopulateDropdownItems();
-                     else
-                        currentText = this.Value.ToString();
-
                     if (!string.IsNullOrEmpty(currentText)) this.Value = currentText;
 
                     foreach (GoogleOgcs.EventColour.Palette p in Forms.ColourMap.GoogleComboBox.Items) {

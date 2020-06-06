@@ -874,7 +874,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         /// Get the Outlook category colour name from a Google colour ID
         /// </summary>
         /// <param name="gColourId">The Google colour ID</param>
-        /// <param name="oColour">The Outlook category</param>
+        /// <param name="oColour">The Outlook category, if already assigned to appointment</param>
         /// <returns>Outlook category name</returns>
         private String getColour(String gColourId, String oColour) {
             if (!Settings.Instance.AddColours && !Settings.Instance.SetEntriesColour) return "";
@@ -897,8 +897,22 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             }
         }
         private String getGoogleCategoryColour(String gColourId) {
+            OlCategoryColor? outlookColour = null;
+
+            if (Settings.Instance.ColourMaps.Count > 0) {
+                KeyValuePair<String, String> kvp = Settings.Instance.ColourMaps.FirstOrDefault(cm => cm.Value == gColourId);
+                if (kvp.Key != null) {
+                    outlookColour = OutlookOgcs.Calendar.Categories.OutlookColour(kvp.Key);
+                    if (outlookColour != null) {
+                        log.Debug("Colour mapping used: " + kvp.Value + ":"+ GoogleOgcs.Calendar.Instance.ColourPalette.GetColour(gColourId).Name +" => " + kvp.Key);
+                        return kvp.Key;
+                    }
+                }
+            }
+
+            //Algorithmic closest colour matching
             GoogleOgcs.EventColour.Palette pallete = GoogleOgcs.Calendar.Instance.ColourPalette.GetColour(gColourId);
-            OlCategoryColor outlookColour = Categories.Map.GetClosestCategory(pallete);
+            outlookColour = Categories.Map.GetClosestCategory(pallete);
             return Categories.FindName(outlookColour);
         }
 
