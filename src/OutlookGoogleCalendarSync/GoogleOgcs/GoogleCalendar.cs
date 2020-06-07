@@ -1387,13 +1387,12 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             if (Settings.Instance.SetEntriesColour) {
                 if (Settings.Instance.TargetCalendar.Id == Sync.Direction.GoogleToOutlook.Id) { //Colour forced to sync in other direction
                     if (gColour == null) //Creating item
-                        getOutlookCategoryColour(aiCategories, ref categoryColour);
+                        return this.ColourPalette.ActivePalette[Convert.ToInt16(Settings.Instance.SetEntriesColourGoogleId)];
                     else return gColour;
 
                 } else {
                     if (!Settings.Instance.CreatedItemsOnly || (Settings.Instance.CreatedItemsOnly && gColour == null)) {
-                        categoryColour = OutlookOgcs.Categories.Map.Colours.Where(c => c.Key.ToString() == Settings.Instance.SetEntriesColourValue).FirstOrDefault().Key;
-                        if (categoryColour == null) log.Warn("Could not convert category name '" + Settings.Instance.SetEntriesColourValue + "' into Outlook category type.");
+                        return this.ColourPalette.ActivePalette[Convert.ToInt16(Settings.Instance.SetEntriesColourGoogleId)];
                     } else return gColour;
                 }
 
@@ -1402,22 +1401,27 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
             if (categoryColour == null || categoryColour == OlCategoryColor.olCategoryColorNone)
                 return EventColour.Palette.NullPalette;
-            else {
-                if (Settings.Instance.ColourMaps.Count > 0) {
-                    KeyValuePair<String, String> kvp = Settings.Instance.ColourMaps.FirstOrDefault(cm => OutlookOgcs.Calendar.Categories.OutlookColour(cm.Key) == categoryColour);
-                    if (kvp.Key != null) {
-                        gColour = ColourPalette.ActivePalette.FirstOrDefault(ap => ap.Id == kvp.Value);
-                        if (gColour != null) {
-                            log.Debug("Colour mapping used: " + kvp.Key + " => " + kvp.Value + ":" + gColour.Name);
-                            return gColour;
-                        }
+            else
+                return GetColour((OlCategoryColor)categoryColour);
+        }
+
+        public EventColour.Palette GetColour(OlCategoryColor categoryColour) {
+            EventColour.Palette gColour = null;
+
+            if (Settings.Instance.ColourMaps.Count > 0) {
+                KeyValuePair<String, String> kvp = Settings.Instance.ColourMaps.FirstOrDefault(cm => OutlookOgcs.Calendar.Categories.OutlookColour(cm.Key) == categoryColour);
+                if (kvp.Key != null) {
+                    gColour = ColourPalette.ActivePalette.FirstOrDefault(ap => ap.Id == kvp.Value);
+                    if (gColour != null) {
+                        log.Debug("Colour mapping used: " + kvp.Key + " => " + kvp.Value + ":" + gColour.Name);
+                        return gColour;
                     }
                 }
-                //Algorithmic closest colour matching
-                System.Drawing.Color color = OutlookOgcs.Categories.Map.RgbColour((OlCategoryColor)categoryColour);
-                EventColour.Palette closest = ColourPalette.GetClosestColour(color);
-                return (closest.Id == "Custom") ? EventColour.Palette.NullPalette : closest;
             }
+            //Algorithmic closest colour matching
+            System.Drawing.Color color = OutlookOgcs.Categories.Map.RgbColour((OlCategoryColor)categoryColour);
+            EventColour.Palette closest = ColourPalette.GetClosestColour(color);
+            return (closest.Id == "Custom") ? EventColour.Palette.NullPalette : closest;
         }
 
         /// <summary>

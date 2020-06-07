@@ -324,15 +324,23 @@ namespace OutlookGoogleCalendarSync.Forms {
             tbTargetCalendar_SelectedItemChanged(null, null);
             cbPrivate.Checked = Settings.Instance.SetEntriesPrivate;
             cbAvailable.Checked = Settings.Instance.SetEntriesAvailable;
+            
             cbColour.Checked = Settings.Instance.SetEntriesColour;
-            ddCategoryColour.AddColourItems();
-            foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddCategoryColour.Items) {
+            ddOutlookColour.AddColourItems();
+            foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
                 if (cInfo.OutlookCategory.ToString() == Settings.Instance.SetEntriesColourValue &&
                     cInfo.Text == Settings.Instance.SetEntriesColourName) {
-                    ddCategoryColour.SelectedItem = cInfo;
+                    ddOutlookColour.SelectedItem = cInfo;
                 }
             }
-            ddCategoryColour.Enabled = cbColour.Checked;
+            ddOutlookColour.Enabled = cbColour.Checked;
+            ddGoogleColour.AddPaletteColours();
+            foreach (GoogleOgcs.EventColour.Palette pInfo in ddGoogleColour.Items) {
+                if (pInfo.Id == Settings.Instance.SetEntriesColourGoogleId) {
+                    ddGoogleColour.SelectedItem = pInfo;
+                }
+            }
+
             //Obfuscate Direction dropdown
             for (int i = 0; i < cbObfuscateDirection.Items.Count; i++) {
                 Sync.Direction sd = (cbObfuscateDirection.Items[i] as Sync.Direction);
@@ -1217,6 +1225,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 this.dtDNDstart.Visible = false;
                 this.dtDNDend.Visible = false;
                 this.lDNDand.Visible = false;
+                this.ddGoogleColour.Visible = false;
+                this.ddOutlookColour.Visible = true;
             }
             if (Settings.Instance.SyncDirection == Sync.Direction.OutlookToGoogle) {
                 this.cbOutlookPush.Enabled = true;
@@ -1224,6 +1234,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 this.dtDNDstart.Visible = true;
                 this.dtDNDend.Visible = true;
                 this.lDNDand.Visible = true;
+                this.ddGoogleColour.Visible = true;
+                this.ddOutlookColour.Visible = false;
             }
             cbAddAttendees_CheckedChanged(null, null);
             cbAddReminders_CheckedChanged(null, null);
@@ -1296,8 +1308,18 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (!this.Visible) return;
 
             switch (tbTargetCalendar.Text) {
-                case "Google calendar": Settings.Instance.TargetCalendar = Sync.Direction.OutlookToGoogle; break;
-                case "Outlook calendar": Settings.Instance.TargetCalendar = Sync.Direction.GoogleToOutlook; break;
+                case "Google calendar": {
+                        Settings.Instance.TargetCalendar = Sync.Direction.OutlookToGoogle;
+                        this.ddGoogleColour.Visible = true;
+                        this.ddOutlookColour.Visible = false;
+                        break;
+                    }
+                case "Outlook calendar": {
+                        Settings.Instance.TargetCalendar = Sync.Direction.GoogleToOutlook;
+                        this.ddGoogleColour.Visible = false;
+                        this.ddOutlookColour.Visible = true;
+                        break;
+                    }
                 case "target calendar": Settings.Instance.TargetCalendar = Settings.Instance.SyncDirection; break;
             }
         }
@@ -1312,14 +1334,47 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void cbColour_CheckedChanged(object sender, EventArgs e) {
             Settings.Instance.SetEntriesColour = cbColour.Checked;
-            ddCategoryColour.Enabled = cbColour.Checked;
+            ddOutlookColour.Enabled = cbColour.Checked;
+            ddGoogleColour.Enabled = cbColour.Checked;
         }
 
-        private void ddCategoryColour_SelectedIndexChanged(object sender, EventArgs e) {
+        private void ddOutlookColour_SelectedIndexChanged(object sender, EventArgs e) {
             if (!this.Visible) return;
 
-            Settings.Instance.SetEntriesColourValue = ddCategoryColour.SelectedItem.OutlookCategory.ToString();
-            Settings.Instance.SetEntriesColourName = ddCategoryColour.SelectedItem.Text;
+            Settings.Instance.SetEntriesColourValue = ddOutlookColour.SelectedItem.OutlookCategory.ToString();
+            Settings.Instance.SetEntriesColourName = ddOutlookColour.SelectedItem.Text;
+
+            if (sender == null) return;
+            try {
+                ddGoogleColour.SelectedIndexChanged -= ddGoogleColour_SelectedIndexChanged;
+                ddGoogleColour.SelectedIndex = Convert.ToInt16(GoogleOgcs.Calendar.Instance.GetColour(ddOutlookColour.SelectedItem.OutlookCategory).Id);
+                ddGoogleColour_SelectedIndexChanged(null, null);
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("ddOutlookColour_SelectedIndexChanged(): Could not update ddGoogleColour.", ex);
+            } finally {
+                ddGoogleColour.SelectedIndexChanged += ddGoogleColour_SelectedIndexChanged;
+            }
+        }
+        private void ddGoogleColour_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!this.Visible) return;
+
+            Settings.Instance.SetEntriesColourGoogleId = ddGoogleColour.SelectedItem.Id;
+
+            if (sender == null) return;
+            try {
+                ddOutlookColour.SelectedIndexChanged -= ddOutlookColour_SelectedIndexChanged;
+                String oCatName = OutlookOgcs.Calendar.Instance.GetCategoryColour(ddGoogleColour.SelectedItem.Id);
+                foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
+                    if (cInfo.Text == oCatName) {
+                        ddOutlookColour.SelectedItem = cInfo;
+                    }
+                }
+                ddOutlookColour_SelectedIndexChanged(null, null);
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("ddGoogleColour_SelectedIndexChanged(): Could not update ddOutlookColour.", ex);
+            } finally {
+                ddOutlookColour.SelectedIndexChanged += ddOutlookColour_SelectedIndexChanged;
+            }
         }
         #endregion
 

@@ -280,8 +280,12 @@ namespace OutlookGoogleCalendarSync {
         [DataMember] public bool SetEntriesPrivate { get; set; }
         [DataMember] public bool SetEntriesAvailable { get; set; }
         [DataMember] public bool SetEntriesColour { get; set; }
+        /// <summary>Set all Outlook appointments to this OlCategoryColor</summary>
         [DataMember] public String SetEntriesColourValue { get; set; }
+        /// <summary>Set all Outlook appointments to this custom category name</summary>
         [DataMember] public String SetEntriesColourName { get; set; }
+        /// <summary>Set all Google events to this colour ID</summary>
+        [DataMember] public String SetEntriesColourGoogleId { get; set; }
         [DataMember]
         public ColourMappingDictionary ColourMaps { get; private set; }
         [CollectionDataContract(

@@ -13,6 +13,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         public static Extensions.GoogleColourPicker GoogleComboBox = new Extensions.GoogleColourPicker();
         
         public ColourMap() {
+            log.Info("Opening colour mapping window.");
             OutlookComboBox = null;
             OutlookComboBox = new Extensions.OutlookColourPicker();
             OutlookComboBox.AddCategoryColours();
@@ -21,16 +22,12 @@ namespace OutlookGoogleCalendarSync.Forms {
             GoogleComboBox.AddPaletteColours();
 
             InitializeComponent();
-            initialiseDataGridView();
-        }
+            loadConfig();
 
-        private void initialiseDataGridView() {
-            try {
-                log.Info("Opening colour mapping window.");
-                loadConfig();
-            } catch (System.Exception ex) {
-                OGCSexception.Analyse(ex);
-            }
+            ddOutlookColour.AddCategoryColours();
+            ddOutlookColour.SelectedIndex = 0;
+            ddGoogleColour.AddPaletteColours();
+            ddGoogleColour.SelectedIndex = 0;
         }
         
         private void loadConfig() {
@@ -97,7 +94,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 foreach (DataGridViewRow row in colourGridView.Rows) {
                     if (row.Cells["OutlookColour"].Value == null || row.Cells["OutlookColour"].Value.ToString().Trim() == "") continue;
                     try {
-                        Settings.Instance.ColourMaps.Add(row.Cells["OutlookColour"].Value.ToString(), GoogleOgcs.EventColour.Palette.GetColourId(row.Cells["GoogleColour"].Value.ToString()));                        
+                        Settings.Instance.ColourMaps.Add(row.Cells["OutlookColour"].Value.ToString(), GoogleOgcs.EventColour.Palette.GetColourId(row.Cells["GoogleColour"].Value.ToString()));
                     } catch (System.ArgumentException ex) {
                         if (OGCSexception.GetErrorCode(ex) == "0x80070057") {
                             //An item with the same key has already been added
@@ -161,8 +158,6 @@ namespace OutlookGoogleCalendarSync.Forms {
                 OGCSexception.Analyse(ex);
             }
         }
-        #endregion
-
 
         private void colourGridView_SelectedIndexChanged(object sender, EventArgs e) {
             //((ComboBox)sender).BackColor = System.Drawing.Color.Red; // (System.Drawing.Color)((ComboBox)sender).SelectedItem;
@@ -228,5 +223,36 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             newRowNeeded();
         }
+
+        private void ddOutlookColour_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!this.Visible) return;
+
+            try {
+                ddGoogleColour.SelectedIndexChanged -= ddGoogleColour_SelectedIndexChanged;
+                ddGoogleColour.SelectedIndex = Convert.ToInt16(GoogleOgcs.Calendar.Instance.GetColour(ddOutlookColour.SelectedItem.OutlookCategory).Id);
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("ddOutlookColour_SelectedIndexChanged(): Could not update ddGoogleColour.", ex);
+            } finally {
+                ddGoogleColour.SelectedIndexChanged += ddGoogleColour_SelectedIndexChanged;
+            }
+        }
+        private void ddGoogleColour_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!this.Visible) return;
+
+            try {
+                ddOutlookColour.SelectedIndexChanged -= ddOutlookColour_SelectedIndexChanged;
+                String oCatName = OutlookOgcs.Calendar.Instance.GetCategoryColour(ddGoogleColour.SelectedItem.Id);
+                foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
+                    if (cInfo.Text == oCatName) {
+                        ddOutlookColour.SelectedItem = cInfo;
+                    }
+                }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("ddGoogleColour_SelectedIndexChanged(): Could not update ddOutlookColour.", ex);
+            } finally {
+                ddOutlookColour.SelectedIndexChanged += ddOutlookColour_SelectedIndexChanged;
+            }
+        }
+        #endregion
     }
 }

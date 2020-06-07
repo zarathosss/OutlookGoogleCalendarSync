@@ -16,8 +16,9 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             public String HexValue {
                 get {
                     if (UseWebAppColours) {
-                        if (Id != null && names.ContainsKey(Id))
-                            return names[Id].WebAppHexValue ?? hexValue;
+                        int idx = Convert.ToInt16(Id);
+                        if (Id != null && names.ContainsKey(idx))
+                            return names[idx].WebAppHexValue ?? hexValue;
                         else
                             return hexValue;
                     }
@@ -48,7 +49,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 }
             }
 
-            public static Palette NullPalette = new Palette(null, null, System.Drawing.Color.Transparent);
+            public static Palette NullPalette = new Palette(null, null, Color.Transparent);
 
             public Palette(String id, String hexValue, Color rgbValue) {
                 this.Id = id;
@@ -70,25 +71,25 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 }
             }
 
-            private static Dictionary<String, Metadata> names = new Dictionary<String, Metadata> {
-                { "Custom", new Metadata("Calendar Default", null) },
-                { "1", new Metadata("Lavendar", "#7986CB") },
-                { "2", new Metadata("Sage", "#33B679") },
-                { "3", new Metadata("Grape", "#8E24AA") },
-                { "4", new Metadata("Flamingo", "#E67C73") },
-                { "5", new Metadata("Banana", "#F6BF26") },
-                { "6", new Metadata("Tangerine", "#F4511E") },
-                { "7", new Metadata("Peacock", "#039BE5") },
-                { "8", new Metadata("Graphite", "#616161") },
-                { "9", new Metadata("Blueberry", "#3F51B5") },
-                { "10", new Metadata("Basil", "#0B8043") },
-                { "11", new Metadata("Tomato", "#D50000") }
+            private static Dictionary<int, Metadata> names = new Dictionary<int, Metadata> {
+                { 0, new Metadata("Calendar Default", null) },
+                { 1, new Metadata("Lavendar", "#7986CB") },
+                { 2, new Metadata("Sage", "#33B679") },
+                { 3, new Metadata("Grape", "#8E24AA") },
+                { 4, new Metadata("Flamingo", "#E67C73") },
+                { 5, new Metadata("Banana", "#F6BF26") },
+                { 6, new Metadata("Tangerine", "#F4511E") },
+                { 7, new Metadata("Peacock", "#039BE5") },
+                { 8, new Metadata("Graphite", "#616161") },
+                { 9, new Metadata("Blueberry", "#3F51B5") },
+                { 10, new Metadata("Basil", "#0B8043") },
+                { 11, new Metadata("Tomato", "#D50000") }
             };
 
             public static String GetColourId(String name) {
                 String id = null;
                 try {
-                    id = names.First(n => (n.Value as Metadata).Name == name).Key;
+                    id = names.First(n => (n.Value as Metadata).Name == name).Key.ToString();
                 } catch (System.Exception ex) {
                     OGCSexception.Analyse("Could not find colour ID for '" + name + "'.", ex);
                 }
@@ -100,8 +101,9 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
 
                 String name = null;
                 try {
-                    if (names.ContainsKey(id))
-                        name = (names[id] as Metadata).Name;
+                    int idx = Convert.ToInt16(id);
+                    if (names.ContainsKey(idx))
+                        name = (names[idx] as Metadata).Name;
                     else
                         log.Error("GetColourName(): ID '" + id + "' not found.");
                 } catch (System.Exception ex) {
@@ -129,7 +131,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         break;
                     }
                 }
-                activePalette.Add(new Palette("Custom", currentCal.HexValue, currentCal.RgbValue));
+                activePalette.Add(new Palette("0", currentCal.HexValue, currentCal.RgbValue));
 
                 activePalette.AddRange(eventPalette);
                 return activePalette;

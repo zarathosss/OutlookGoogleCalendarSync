@@ -20,7 +20,6 @@ namespace OutlookGoogleCalendarSync.Extensions {
         public void AddColourItems() {
             Items.Clear();
             AddCategoryColours();
-            AddStandardColours();
         }
 
         /// <summary>

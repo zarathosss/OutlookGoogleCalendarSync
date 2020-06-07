@@ -110,7 +110,8 @@
             this.pbExpandHow = new System.Windows.Forms.PictureBox();
             this.gbSyncOptions_How = new System.Windows.Forms.GroupBox();
             this.howMorePanel = new System.Windows.Forms.Panel();
-            this.ddCategoryColour = new OutlookGoogleCalendarSync.Extensions.OutlookColourPicker();
+            this.ddGoogleColour = new OutlookGoogleCalendarSync.Extensions.GoogleColourPicker();
+            this.ddOutlookColour = new OutlookGoogleCalendarSync.Extensions.OutlookColourPicker();
             this.cbColour = new System.Windows.Forms.CheckBox();
             this.tbTargetCalendar = new System.Windows.Forms.DomainUpDown();
             this.tbCreatedItemsOnly = new System.Windows.Forms.DomainUpDown();
@@ -139,12 +140,13 @@
             this.cbIntervalUnit = new System.Windows.Forms.ComboBox();
             this.tbInterval = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
-            this.tbDaysInTheFuture = new Extensions.OgcsNumericUpDown();
-            this.tbDaysInThePast = new Extensions.OgcsNumericUpDown();
+            this.tbDaysInTheFuture = new OutlookGoogleCalendarSync.Extensions.OgcsNumericUpDown();
+            this.tbDaysInThePast = new OutlookGoogleCalendarSync.Extensions.OgcsNumericUpDown();
             this.lDaysInFuture = new System.Windows.Forms.Label();
             this.lDaysInPast = new System.Windows.Forms.Label();
             this.lDateRange = new System.Windows.Forms.Label();
             this.gbSyncOptions_What = new System.Windows.Forms.GroupBox();
+            this.btColourMap = new System.Windows.Forms.Button();
             this.cbCloakEmail = new System.Windows.Forms.CheckBox();
             this.lDNDand = new System.Windows.Forms.Label();
             this.dtDNDend = new System.Windows.Forms.DateTimePicker();
@@ -249,7 +251,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.pbSocialDonate = new System.Windows.Forms.PictureBox();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.btColourMap = new System.Windows.Forms.Button();
             this.tabApp.SuspendLayout();
             this.tabPage_Sync.SuspendLayout();
             this.consolePanel.SuspendLayout();
@@ -1155,7 +1156,8 @@
             // 
             this.howMorePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.howMorePanel.Controls.Add(this.ddCategoryColour);
+            this.howMorePanel.Controls.Add(this.ddGoogleColour);
+            this.howMorePanel.Controls.Add(this.ddOutlookColour);
             this.howMorePanel.Controls.Add(this.cbColour);
             this.howMorePanel.Controls.Add(this.tbTargetCalendar);
             this.howMorePanel.Controls.Add(this.tbCreatedItemsOnly);
@@ -1168,21 +1170,37 @@
             this.howMorePanel.Size = new System.Drawing.Size(353, 85);
             this.howMorePanel.TabIndex = 48;
             // 
-            // ddCategoryColour
+            // ddGoogleColour
             // 
-            this.ddCategoryColour.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.ddGoogleColour.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ddCategoryColour.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.ddCategoryColour.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ddCategoryColour.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ddCategoryColour.FormattingEnabled = true;
-            this.ddCategoryColour.Location = new System.Drawing.Point(178, 58);
-            this.ddCategoryColour.MinimumSize = new System.Drawing.Size(158, 0);
-            this.ddCategoryColour.Name = "ddCategoryColour";
-            this.ddCategoryColour.SelectedItem = null;
-            this.ddCategoryColour.Size = new System.Drawing.Size(158, 21);
-            this.ddCategoryColour.TabIndex = 43;
-            this.ddCategoryColour.SelectedIndexChanged += new System.EventHandler(this.ddCategoryColour_SelectedIndexChanged);
+            this.ddGoogleColour.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.ddGoogleColour.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ddGoogleColour.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ddGoogleColour.FormattingEnabled = true;
+            this.ddGoogleColour.Location = new System.Drawing.Point(178, 58);
+            this.ddGoogleColour.MinimumSize = new System.Drawing.Size(158, 0);
+            this.ddGoogleColour.Name = "ddGoogleColour";
+            this.ddGoogleColour.SelectedItem = null;
+            this.ddGoogleColour.Size = new System.Drawing.Size(158, 21);
+            this.ddGoogleColour.TabIndex = 45;
+            this.ddGoogleColour.SelectedIndexChanged += new System.EventHandler(this.ddGoogleColour_SelectedIndexChanged);
+            // 
+            // ddOutlookColour
+            // 
+            this.ddOutlookColour.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ddOutlookColour.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.ddOutlookColour.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ddOutlookColour.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ddOutlookColour.FormattingEnabled = true;
+            this.ddOutlookColour.Location = new System.Drawing.Point(178, 58);
+            this.ddOutlookColour.MinimumSize = new System.Drawing.Size(158, 0);
+            this.ddOutlookColour.Name = "ddOutlookColour";
+            this.ddOutlookColour.SelectedItem = null;
+            this.ddOutlookColour.Size = new System.Drawing.Size(158, 21);
+            this.ddOutlookColour.TabIndex = 43;
+            this.ddOutlookColour.SelectedIndexChanged += new System.EventHandler(this.ddOutlookColour_SelectedIndexChanged);
             // 
             // cbColour
             // 
@@ -1656,6 +1674,19 @@
             this.gbSyncOptions_What.TabIndex = 39;
             this.gbSyncOptions_What.TabStop = false;
             this.gbSyncOptions_What.Text = "  What";
+            // 
+            // btColourMap
+            // 
+            this.btColourMap.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btColourMap.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.btColourMap.Location = new System.Drawing.Point(134, 93);
+            this.btColourMap.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
+            this.btColourMap.Name = "btColourMap";
+            this.btColourMap.Size = new System.Drawing.Size(75, 21);
+            this.btColourMap.TabIndex = 46;
+            this.btColourMap.Text = "Mappings";
+            this.btColourMap.UseVisualStyleBackColor = true;
+            this.btColourMap.Click += new System.EventHandler(this.btColourMap_Click);
             // 
             // cbCloakEmail
             // 
@@ -3031,19 +3062,6 @@
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
             this.trayIcon.Text = "Outlook Google Calendar Sync";
             // 
-            // btColourMap
-            // 
-            this.btColourMap.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btColourMap.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btColourMap.Location = new System.Drawing.Point(134, 93);
-            this.btColourMap.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
-            this.btColourMap.Name = "btColourMap";
-            this.btColourMap.Size = new System.Drawing.Size(75, 21);
-            this.btColourMap.TabIndex = 46;
-            this.btColourMap.Text = "Mappings";
-            this.btColourMap.UseVisualStyleBackColor = true;
-            this.btColourMap.Click += new System.EventHandler(this.btColourMap_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3286,7 +3304,7 @@
         private System.Windows.Forms.PictureBox pbExpandWhen;
         private System.Windows.Forms.Button btCloseRegexRules;
         private System.Windows.Forms.CheckBox cbAddColours;
-        public Extensions.OutlookColourPicker ddCategoryColour;
+        public Extensions.OutlookColourPicker ddOutlookColour;
         private System.Windows.Forms.Label lDonateTip;
         private System.Windows.Forms.CheckBox cbLocation;
         private System.Windows.Forms.Label label7;
@@ -3327,5 +3345,6 @@
         private System.Windows.Forms.CheckBox cbTelemetryDisabled;
         public System.Windows.Forms.Button btCustomTzMap;
         private System.Windows.Forms.Button btColourMap;
+        public Extensions.GoogleColourPicker ddGoogleColour;
     }
 }
