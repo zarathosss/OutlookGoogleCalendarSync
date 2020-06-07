@@ -62,7 +62,9 @@ namespace OutlookGoogleCalendarSync.Extensions {
         /// <summary>
         /// Add all the available Google colours
         /// </summary>
-        public void AddPaletteColours() {
+        public void AddPaletteColours(Boolean connectToGoogle = false) {
+            if (GoogleOgcs.Calendar.IsInstanceNull && !connectToGoogle) return;
+
             foreach (GoogleOgcs.EventColour.Palette palette in GoogleOgcs.Calendar.Instance.ColourPalette.ActivePalette) {
                 Items.Add(palette);
             }

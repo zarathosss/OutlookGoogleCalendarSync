@@ -224,8 +224,6 @@
             this.tabPage_About = new System.Windows.Forms.TabPage();
             this.lDonateTip = new System.Windows.Forms.Label();
             this.dgAbout = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbAlphaReleases = new System.Windows.Forms.CheckBox();
             this.btCheckForUpdate = new System.Windows.Forms.Button();
             this.label28 = new System.Windows.Forms.Label();
@@ -251,6 +249,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.pbSocialDonate = new System.Windows.Forms.PictureBox();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.AboutColumnLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AboutColumnValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabApp.SuspendLayout();
             this.tabPage_Sync.SuspendLayout();
             this.consolePanel.SuspendLayout();
@@ -1185,6 +1185,7 @@
             this.ddGoogleColour.Size = new System.Drawing.Size(158, 21);
             this.ddGoogleColour.TabIndex = 45;
             this.ddGoogleColour.SelectedIndexChanged += new System.EventHandler(this.ddGoogleColour_SelectedIndexChanged);
+            this.ddGoogleColour.Enter += new System.EventHandler(this.ddGoogleColour_Enter);
             // 
             // ddOutlookColour
             // 
@@ -2691,8 +2692,8 @@
             this.dgAbout.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgAbout.ColumnHeadersVisible = false;
             this.dgAbout.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1,
-            this.Column2});
+            this.AboutColumnLabel,
+            this.AboutColumnValue});
             this.dgAbout.Location = new System.Drawing.Point(78, 48);
             this.dgAbout.Name = "dgAbout";
             this.dgAbout.ReadOnly = true;
@@ -2702,23 +2703,6 @@
             this.dgAbout.Size = new System.Drawing.Size(328, 91);
             this.dgAbout.TabIndex = 44;
             this.dgAbout.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgAbout_CellContentDoubleClick);
-            // 
-            // Column1
-            // 
-            this.Column1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.Column1.DefaultCellStyle = dataGridViewCellStyle3;
-            this.Column1.HeaderText = "Name";
-            this.Column1.Name = "Column1";
-            this.Column1.ReadOnly = true;
-            this.Column1.Width = 5;
-            // 
-            // Column2
-            // 
-            this.Column2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column2.HeaderText = "Value";
-            this.Column2.Name = "Column2";
-            this.Column2.ReadOnly = true;
             // 
             // cbAlphaReleases
             // 
@@ -3062,6 +3046,23 @@
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
             this.trayIcon.Text = "Outlook Google Calendar Sync";
             // 
+            // AboutColumnLabel
+            // 
+            this.AboutColumnLabel.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.AboutColumnLabel.DefaultCellStyle = dataGridViewCellStyle3;
+            this.AboutColumnLabel.HeaderText = "AboutName";
+            this.AboutColumnLabel.Name = "AboutColumnLabel";
+            this.AboutColumnLabel.ReadOnly = true;
+            this.AboutColumnLabel.Width = 5;
+            // 
+            // AboutColumnValue
+            // 
+            this.AboutColumnValue.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.AboutColumnValue.HeaderText = "AboutValue";
+            this.AboutColumnValue.Name = "AboutColumnValue";
+            this.AboutColumnValue.ReadOnly = true;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3251,8 +3252,6 @@
         private System.Windows.Forms.TextBox tbTS2;
         private System.Windows.Forms.TextBox tbTS3;
         private System.Windows.Forms.TextBox tbTS1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         public System.Windows.Forms.ComboBox cbIntervalUnit;
         public System.Windows.Forms.NumericUpDown tbInterval;
         private System.Windows.Forms.Label lNextSyncVal;
@@ -3346,5 +3345,7 @@
         public System.Windows.Forms.Button btCustomTzMap;
         private System.Windows.Forms.Button btColourMap;
         public Extensions.GoogleColourPicker ddGoogleColour;
+        private System.Windows.Forms.DataGridViewTextBoxColumn AboutColumnLabel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn AboutColumnValue;
     }
 }

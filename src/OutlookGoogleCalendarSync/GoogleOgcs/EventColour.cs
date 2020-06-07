@@ -16,10 +16,11 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             public String HexValue {
                 get {
                     if (UseWebAppColours) {
-                        int idx = Convert.ToInt16(Id);
-                        if (Id != null && names.ContainsKey(idx))
-                            return names[idx].WebAppHexValue ?? hexValue;
-                        else
+                        if (!string.IsNullOrEmpty(Id)) {
+                            int idx = Convert.ToInt16(Id);
+                            if (names.ContainsKey(idx))
+                                return names[idx].WebAppHexValue ?? hexValue;
+                        } else
                             return hexValue;
                     }
                     return hexValue;
@@ -97,7 +98,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             }
 
             public static String GetColourName(String id) {
-                if (id == null) return null;
+                if (string.IsNullOrEmpty(id)) return null;
 
                 String name = null;
                 try {
@@ -122,6 +123,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         public List<Palette> ActivePalette {
             get {
                 List<Palette> activePalette = new List<Palette>();
+                if (Settings.Instance.UseGoogleCalendar == null) return activePalette;
 
                 //Palette currentCal = calendarPalette.Find(p => p.Id == Settings.Instance.UseGoogleCalendar.ColourId);
                 Palette currentCal = null;
@@ -131,7 +133,8 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                         break;
                     }
                 }
-                activePalette.Add(new Palette("0", currentCal.HexValue, currentCal.RgbValue));
+                if (currentCal != null)
+                    activePalette.Add(new Palette("0", currentCal.HexValue, currentCal.RgbValue));
 
                 activePalette.AddRange(eventPalette);
                 return activePalette;

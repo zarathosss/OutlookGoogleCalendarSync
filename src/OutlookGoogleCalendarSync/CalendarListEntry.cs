@@ -15,16 +15,10 @@ namespace OutlookGoogleCalendarSync {
         public string Id { get; internal set; }
         [DataMember]
         private string AccessRole { get; set; }
-        private string colourId;
+        private string colourId = "0";
         [DataMember]
         public string ColourId {
-            get {
-                if (colourId == null) {
-                    System.Collections.Generic.List<GoogleCalendarListEntry> cals = GoogleOgcs.Calendar.Instance.GetCalendars();
-                    colourId = cals.Find(cal => cal.Id == Settings.Instance.UseGoogleCalendar.Id).ColourId;
-                }
-                return colourId;
-            }
+            get { return colourId; }
             internal set { colourId = value; }
         }
 
