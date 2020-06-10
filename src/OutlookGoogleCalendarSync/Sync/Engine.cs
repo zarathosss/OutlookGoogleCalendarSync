@@ -132,9 +132,6 @@ namespace OutlookGoogleCalendarSync.Sync {
         }
 
         public void Start(Boolean updateSyncSchedule = true) {
-            new Forms.ColourMap().ShowDialog(Forms.Main.Instance);
-
-            return;
             Forms.Main mainFrm = Forms.Main.Instance;
             try {
                 DateTime syncStarted = DateTime.Now;

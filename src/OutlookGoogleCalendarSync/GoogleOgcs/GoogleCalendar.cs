@@ -42,7 +42,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
         private GoogleOgcs.EventColour colourPalette;
         public GoogleOgcs.EventColour ColourPalette {
             get {
-                if (colourPalette == null) {
+                if (colourPalette == null || colourPalette.ActivePalette.Count() == 0) {
                     colourPalette = new EventColour();
                     colourPalette.Get();
                 }

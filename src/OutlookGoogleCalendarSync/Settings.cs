@@ -125,7 +125,7 @@ namespace OutlookGoogleCalendarSync {
             SetEntriesColour = false;
             SetEntriesColourValue = Microsoft.Office.Interop.Outlook.OlCategoryColor.olCategoryColorNone.ToString();
             SetEntriesColourName = "None";
-            SetEntriesColourGoogleId = "";
+            SetEntriesColourGoogleId = "0";
             ColourMaps = new ColourMappingDictionary();
             Obfuscation = new Obfuscate();
 

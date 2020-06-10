@@ -23,11 +23,6 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             InitializeComponent();
             loadConfig();
-
-            ddOutlookColour.AddCategoryColours();
-            ddOutlookColour.SelectedIndex = 0;
-            ddGoogleColour.AddPaletteColours();
-            ddGoogleColour.SelectedIndex = 0;
         }
         
         private void loadConfig() {
@@ -36,6 +31,14 @@ namespace OutlookGoogleCalendarSync.Forms {
                 foreach (KeyValuePair<String, String> colourMap in Settings.Instance.ColourMaps) {
                     addRow(colourMap.Key, GoogleOgcs.EventColour.Palette.GetColourName(colourMap.Value));
                 }
+                ddOutlookColour.AddCategoryColours();
+                if (ddOutlookColour.Items.Count > 0)
+                    ddOutlookColour.SelectedIndex = 0;
+
+                ddGoogleColour.AddPaletteColours();
+                if (ddGoogleColour.Items.Count > 0)
+                    ddGoogleColour.SelectedIndex = 0;
+
             } catch (System.Exception ex) {
                 OGCSexception.Analyse("Populating gridview cells from Settings.", ex);
             }
