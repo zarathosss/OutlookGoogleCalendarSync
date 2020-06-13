@@ -1381,43 +1381,6 @@ namespace OutlookGoogleCalendarSync.Forms {
                 ddOutlookColour.SelectedIndexChanged += ddOutlookColour_SelectedIndexChanged;
             }
         }
-
-        private void ddGoogleColour_Enter(object sender, EventArgs e) {
-            if (Settings.Instance.UseGoogleCalendar == null || string.IsNullOrEmpty(Settings.Instance.UseGoogleCalendar.Id)) {
-                OgcsMessageBox.Show("You need to select a Google Calendar first on the 'Settings' tab.", "Configuration Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            ToolTip loading = new ToolTip();
-            try {
-                GoogleOgcs.EventColour.Palette currentSelection = (GoogleOgcs.EventColour.Palette)ddGoogleColour.SelectedItem;
-
-                if (GoogleOgcs.Calendar.IsInstanceNull) {
-                    loading.SetToolTip(ddGoogleColour, "Retrieving colours from Google...");
-                    loading.ShowAlways = true;
-                    loading.InitialDelay = 0;
-                    loading.Show("Retrieving colours from Google...", this, ddGoogleColour.FindForm().PointToClient(ddGoogleColour.Parent.PointToScreen(ddGoogleColour.Location)));
-                }
-                while (ddGoogleColour.Items.Count > 0)
-                    ddGoogleColour.Items.RemoveAt(0);
-                ddGoogleColour.AddPaletteColours(true);
-
-                foreach (GoogleOgcs.EventColour.Palette pInfo in ddGoogleColour.Items) {
-                    if (pInfo.Id == currentSelection.Id) {
-                        ddGoogleColour.SelectedItem = pInfo;
-                        break;
-                    }
-                }
-            } catch (System.Exception ex) {
-                OGCSexception.Analyse("ddGoogleColour_Enter()", ex);
-            } finally {
-                loading.Hide(this);
-                loading.RemoveAll();
-            }
-
-            if (this.ddGoogleColour.Items.Count > 1 && ddGoogleColour.SelectedIndex == -1)
-                ddGoogleColour.SelectedIndex = 0;
-        }
         #endregion
 
         #region Obfuscation Panel

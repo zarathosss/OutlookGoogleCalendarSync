@@ -19,7 +19,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             OutlookComboBox.AddCategoryColours();
             GoogleComboBox = null;
             GoogleComboBox = new Extensions.GoogleColourPicker();
-            GoogleComboBox.AddPaletteColours();
+            GoogleComboBox.AddPaletteColours(true);
 
             InitializeComponent();
             loadConfig();
@@ -34,7 +34,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                 ddOutlookColour.AddCategoryColours();
                 if (ddOutlookColour.Items.Count > 0)
                     ddOutlookColour.SelectedIndex = 0;
-
+                
                 ddGoogleColour.AddPaletteColours();
                 if (ddGoogleColour.Items.Count > 0)
                     ddGoogleColour.SelectedIndex = 0;

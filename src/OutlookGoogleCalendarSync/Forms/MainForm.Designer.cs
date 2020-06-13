@@ -1185,7 +1185,6 @@
             this.ddGoogleColour.Size = new System.Drawing.Size(158, 21);
             this.ddGoogleColour.TabIndex = 45;
             this.ddGoogleColour.SelectedIndexChanged += new System.EventHandler(this.ddGoogleColour_SelectedIndexChanged);
-            this.ddGoogleColour.Enter += new System.EventHandler(this.ddGoogleColour_Enter);
             // 
             // ddOutlookColour
             // 

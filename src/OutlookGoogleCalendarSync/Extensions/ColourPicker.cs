@@ -57,6 +57,7 @@ namespace OutlookGoogleCalendarSync.Extensions {
     public class GoogleColourPicker : ColourPicker {
         public GoogleColourPicker() {
             DrawItem += ColourPicker_DrawItem;
+            Enter += ColourPicker_Enter;
         }
 
         /// <summary>
@@ -83,6 +84,44 @@ namespace OutlookGoogleCalendarSync.Extensions {
         public new GoogleOgcs.EventColour.Palette SelectedItem {
             get { return (GoogleOgcs.EventColour.Palette)base.SelectedItem; }
             set { base.SelectedItem = value; }
+        }
+        
+        private void ColourPicker_Enter(object sender, EventArgs e) {
+            if (Settings.Instance.UseGoogleCalendar == null || string.IsNullOrEmpty(Settings.Instance.UseGoogleCalendar.Id)) {
+                OgcsMessageBox.Show("You need to select a Google Calendar first on the 'Settings' tab.", "Configuration Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            ToolTip loading = new ToolTip();
+            try {
+                GoogleOgcs.EventColour.Palette currentSelection = (GoogleOgcs.EventColour.Palette)SelectedItem;
+
+                if (GoogleOgcs.Calendar.IsInstanceNull) {
+                    loading.SetToolTip(this, "Retrieving colours from Google...");
+                    loading.ShowAlways = true;
+                    loading.InitialDelay = 0;
+                    loading.Show("Retrieving colours from Google...", this, this.FindForm().PointToClient(this.Parent.PointToScreen(this.Location)));
+
+                    while (Items.Count > 0)
+                        Items.RemoveAt(0);
+                    AddPaletteColours(true);
+
+                    foreach (GoogleOgcs.EventColour.Palette pInfo in Items) {
+                        if (pInfo.Id == currentSelection.Id) {
+                            SelectedItem = pInfo;
+                            break;
+                        }
+                    }
+                }
+            } catch (System.Exception ex) {
+                OGCSexception.Analyse("ColourPicker_Enter()", ex);
+            } finally {
+                loading.Hide(this);
+                loading.RemoveAll();
+            }
+
+            if (Items.Count > 1 && SelectedIndex == -1)
+                SelectedIndex = 0;
         }
     }
     #endregion
