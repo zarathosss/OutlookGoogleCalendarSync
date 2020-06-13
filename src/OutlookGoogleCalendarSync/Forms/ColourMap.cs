@@ -232,7 +232,17 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             try {
                 ddGoogleColour.SelectedIndexChanged -= ddGoogleColour_SelectedIndexChanged;
+                
+                foreach (DataGridViewRow row in colourGridView.Rows) {
+                    if (row.Cells["OutlookColour"].Value.ToString() == ddOutlookColour.SelectedItem.Text && !string.IsNullOrEmpty(row.Cells["GoogleColour"].Value.ToString())) {
+                        String colourId = GoogleOgcs.EventColour.Palette.GetColourId(row.Cells["GoogleColour"].Value.ToString());
+                        ddGoogleColour.SelectedIndex = Convert.ToInt16(colourId);
+                        return;
+                    }
+                }
+
                 ddGoogleColour.SelectedIndex = Convert.ToInt16(GoogleOgcs.Calendar.Instance.GetColour(ddOutlookColour.SelectedItem.OutlookCategory).Id);
+
             } catch (System.Exception ex) {
                 OGCSexception.Analyse("ddOutlookColour_SelectedIndexChanged(): Could not update ddGoogleColour.", ex);
             } finally {
@@ -244,12 +254,41 @@ namespace OutlookGoogleCalendarSync.Forms {
 
             try {
                 ddOutlookColour.SelectedIndexChanged -= ddOutlookColour_SelectedIndexChanged;
-                String oCatName = OutlookOgcs.Calendar.Instance.GetCategoryColour(ddGoogleColour.SelectedItem.Id);
-                foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
-                    if (cInfo.Text == oCatName) {
-                        ddOutlookColour.SelectedItem = cInfo;
+
+                String oCatName = null;
+                log.Fine("Checking grid for map...");
+                foreach (DataGridViewRow row in colourGridView.Rows) {
+                    if (row.Cells["GoogleColour"].Value != null && row.Cells["GoogleColour"].Value.ToString() == ddGoogleColour.SelectedItem.Name) {
+                        oCatName = row.Cells["OutlookColour"].Value.ToString();
+                        break;
                     }
                 }
+
+                if (string.IsNullOrEmpty(oCatName))
+                    oCatName = OutlookOgcs.Calendar.Instance.GetCategoryColour(ddGoogleColour.SelectedItem.Id, false);
+
+                if (!string.IsNullOrEmpty(oCatName)) {
+                    foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
+                        if (cInfo.Text == oCatName) {
+                            ddOutlookColour.SelectedItem = cInfo;
+                            return;
+                        }
+                    }
+                    log.Warn("The category '" + oCatName + "' exists, but wasn't found in Outlook colour dropdown.");
+                    OutlookOgcs.Calendar.Instance.IOutlook.RefreshCategories();
+                    while (ddOutlookColour.Items.Count > 0)
+                        ddOutlookColour.Items.RemoveAt(0);
+                    ddOutlookColour.AddCategoryColours();
+
+                    foreach (OutlookOgcs.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
+                        if (cInfo.Text == oCatName) {
+                            ddOutlookColour.SelectedItem = cInfo;
+                            return;
+                        }
+                    }
+                }
+                ddOutlookColour.SelectedIndex = -1;
+
             } catch (System.Exception ex) {
                 OGCSexception.Analyse("ddGoogleColour_SelectedIndexChanged(): Could not update ddOutlookColour.", ex);
             } finally {

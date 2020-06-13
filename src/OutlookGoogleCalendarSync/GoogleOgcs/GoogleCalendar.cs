@@ -1421,7 +1421,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             //Algorithmic closest colour matching
             System.Drawing.Color color = OutlookOgcs.Categories.Map.RgbColour((OlCategoryColor)categoryColour);
             EventColour.Palette closest = ColourPalette.GetClosestColour(color);
-            return (closest.Id == "Custom") ? EventColour.Palette.NullPalette : closest;
+            return (closest.Id == "0") ? EventColour.Palette.NullPalette : closest;
         }
 
         /// <summary>

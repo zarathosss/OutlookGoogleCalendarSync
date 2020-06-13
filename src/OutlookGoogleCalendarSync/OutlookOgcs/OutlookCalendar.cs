@@ -897,7 +897,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
                 return GetCategoryColour(gColourId);
             }
         }
-        public String GetCategoryColour(String gColourId) {
+        public String GetCategoryColour(String gColourId, Boolean createMissingCategory = true) {
             OlCategoryColor? outlookColour = null;
 
             if (Settings.Instance.ColourMaps.Count > 0) {
@@ -914,7 +914,7 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             //Algorithmic closest colour matching
             GoogleOgcs.EventColour.Palette pallete = GoogleOgcs.Calendar.Instance.ColourPalette.GetColour(gColourId);
             outlookColour = Categories.Map.GetClosestCategory(pallete);
-            return Categories.FindName(outlookColour);
+            return Categories.FindName(outlookColour, createMissingCategory: createMissingCategory);
         }
 
         #region STATIC functions

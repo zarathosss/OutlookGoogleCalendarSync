@@ -87,6 +87,11 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 { 11, new Metadata("Tomato", "#D50000") }
             };
 
+            /// <summary>
+            /// Get colour ID from the name
+            /// </summary>
+            /// <param name="name">The name of the colour</param>
+            /// <returns>The ID number</returns>
             public static String GetColourId(String name) {
                 String id = null;
                 try {
@@ -97,6 +102,11 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
                 return id;
             }
 
+            /// <summary>
+            /// Get colour name from the ID
+            /// </summary>
+            /// <param name="id">The colour ID</param>
+            /// <returns>The colour name</returns>
             public static String GetColourName(String id) {
                 if (string.IsNullOrEmpty(id)) return null;
 

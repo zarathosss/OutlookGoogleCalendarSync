@@ -195,19 +195,28 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
         /// </summary>
         /// <param name="olCategory">The Outlook category to search by</param>
         /// <param name="categoryName">Optional: The Outlook category name to also search by</param>
+        /// <param name="createMissingCategory">Optional: Create unused category colour?</param>
         /// <returns>The matching category name</returns>
-        public String FindName(Outlook.OlCategoryColor? olCategory, String categoryName = null) {
+        public String FindName(Outlook.OlCategoryColor? olCategory, String categoryName = null, Boolean createMissingCategory = true) {
             if (olCategory == null || olCategory == Outlook.OlCategoryColor.olCategoryColorNone) return "";
 
             Outlook.Category failSafeCategory = null;
             foreach (Outlook.Category category in this.categories) {
-                if (category.Color == olCategory) {
-                    if (categoryName == null) {
-                        if (category.Name.StartsWith("OGCS ")) return category.Name;
-                    } else {
-                        if (category.Name == categoryName) return category.Name;
-                        if (category.Name.StartsWith("OGCS ")) failSafeCategory = category;
+                try {
+                    if (category.Color == olCategory) {
+                        if (categoryName == null) {
+                            if (category.Name.StartsWith("OGCS ")) return category.Name;
+                            else if (!createMissingCategory) return category.Name;
+                        } else {
+                            if (category.Name == categoryName) return category.Name;
+                            if (category.Name.StartsWith("OGCS ")) failSafeCategory = category;
+                        }
                     }
+                } catch (System.Runtime.InteropServices.COMException ex) {
+                    if (OGCSexception.GetErrorCode(ex, 0x0000FFFF) == "0x00004005") { //The operation failed.
+                        log.Warn("It seems a category has been manually removed in Outlook.");
+                        OutlookOgcs.Calendar.Instance.IOutlook.RefreshCategories();
+                    } else throw;
                 }
             }
 
@@ -218,9 +227,17 @@ namespace OutlookGoogleCalendarSync.OutlookOgcs {
             }
 
             log.Debug("Did not find Outlook category " + olCategory.ToString() + (categoryName == null ? "" : " \"" + categoryName + "\""));
-            Outlook.Category newCategory = categories.Add("OGCS " + FriendlyCategoryName(olCategory), olCategory);
-            log.Info("Added new Outlook category \"" + newCategory.Name + "\" for " + newCategory.Color.ToString());
-            return newCategory.Name;
+            String newCategoryName = "OGCS " + FriendlyCategoryName(olCategory);
+            if (!createMissingCategory) {
+                createMissingCategory = System.Windows.Forms.OgcsMessageBox.Show("There is no matching Outlook category.\r\nWould you like to create one of the form '" + newCategoryName + "'?",
+                    "Create new Outlook category?", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes;
+            }
+            if (createMissingCategory) {
+                Outlook.Category newCategory = categories.Add(newCategoryName, olCategory);
+                log.Info("Added new Outlook category \"" + newCategory.Name + "\" for " + newCategory.Color.ToString());
+                return newCategory.Name;
+            }
+            return "";
         }
 
         public static String FriendlyCategoryName(Outlook.OlCategoryColor? olCategory) {
